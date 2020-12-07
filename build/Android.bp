@@ -24,3 +24,11 @@ java_library {
     min_sdk_version: "29",
     apex_available: ["//apex_available:anyapex"],
 }
+
+cc_library_static {
+    name: "libmodules-utils-build",
+    min_sdk_version: "29",
+    export_include_dirs: ["include"],
+    static_libs: ["libbase"],
+    apex_available: ["//apex_available:anyapex"],
+}
