@@ -1,0 +1,20 @@
+android_test {
+    name: "modules-utils-os-tests",
+
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+
+    srcs: [
+        "src/**/*.java",
+    ],
+
+    static_libs: [
+        "modules-utils-os",
+        "androidx.test.runner",
+        "androidx.test.rules",
+    ],
+
+    libs: [
+        "android.test.runner",
+    ],
+}
