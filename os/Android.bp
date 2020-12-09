@@ -17,7 +17,8 @@ java_library {
     name: "modules-utils-os",
 
     srcs: [
-        "src/**/*.java",
+        "java/**/*.aidl",
+        "java/**/*.java",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
