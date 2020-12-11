@@ -30,8 +30,6 @@ import java.io.PrintWriter;
 /**
  * Helper for implementing {@link Binder#onShellCommand Binder.onShellCommand}. This is meant to
  * be copied into mainline modules, so this class must not use any hidden APIs.
- *
- * @hide
  */
 public abstract class BasicShellCommandHandler {
     protected static final String TAG = "ShellCommand";
