@@ -15,13 +15,13 @@
 
 java_library {
     name: "modules-utils-os",
-
     srcs: [
         "java/**/*.aidl",
         "java/**/*.java",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
+    visibility: ["//visibility:public"],
     apex_available: [
         "//apex_available:anyapex",
         "//apex_available:platform",
