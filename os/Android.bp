@@ -27,3 +27,13 @@ java_library {
         "//apex_available:platform",
     ],
 }
+
+filegroup {
+    name: "module-utils-os-aidls",
+    srcs: [
+        "java/com/android/modules/utils/ParceledListSlice.aidl",
+        "java/com/android/modules/utils/StringParceledListSlice.aidl",
+    ],
+    path: "java",
+    visibility: ["//frameworks/base/wifi"],
+}
