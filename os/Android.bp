@@ -35,5 +35,8 @@ filegroup {
         "java/com/android/modules/utils/StringParceledListSlice.aidl",
     ],
     path: "java",
-    visibility: ["//frameworks/base/wifi"],
+    visibility: [
+        "//frameworks/base/wifi",
+        "//packages/modules/Wifi/framework",
+    ],
 }
