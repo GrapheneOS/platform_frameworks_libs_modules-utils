@@ -15,4 +15,5 @@
 // Limit visibility of all modules in this repo by default.
 package {
     default_visibility: [":__subpackages__"],
+    default_applicable_licenses: ["Android-Apache-2.0"],
 }
