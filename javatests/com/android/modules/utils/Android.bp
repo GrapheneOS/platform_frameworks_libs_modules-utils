@@ -9,7 +9,7 @@ android_test {
     min_sdk_version: "30",
 
     srcs: [
-        "src/**/*.java",
+        "*.java",
     ],
 
     static_libs: [
