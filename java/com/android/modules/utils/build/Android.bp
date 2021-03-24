@@ -12,17 +12,32 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-cc_library_static {
-    name: "libmodules-utils-build",
+java_library {
+    name: "modules-utils-build",
+    srcs: ["SdkLevel.java"],
+    sdk_version: "module_current",
     min_sdk_version: "29",
-    export_include_dirs: ["include"],
-    static_libs: ["libbase"],
     visibility: ["//visibility:public"],
-    apex_available: ["//apex_available:anyapex"],
+    apex_available: [
+        "//apex_available:anyapex",
+        "//apex_available:platform",
+    ],
+}
+
+// For modules which use system sdk
+java_library {
+    name: "modules-utils-build_system",
+    srcs: ["SdkLevel.java"],
+    sdk_version: "system_current",
+    min_sdk_version: "29",
+    visibility: ["//visibility:public"],
+    apex_available: [
+        "//apex_available:anyapex",
+        "//apex_available:platform",
+    ],
 }
