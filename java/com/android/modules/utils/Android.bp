@@ -18,10 +18,15 @@ package {
 }
 
 java_library {
+    // TODO this rule should be split into smaller, more focused ones,
+    // ideally each would have its own java package too.
     name: "modules-utils-os",
     srcs: [
-        "java/**/*.aidl",
-        "java/**/*.java",
+        ":module-utils-os-aidls",
+        "BaseParceledListSlice.java",
+        "BasicShellCommandHandler.java",
+        "ParceledListSlice.java",
+        "StringParceledListSlice.java",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
@@ -29,18 +34,5 @@ java_library {
     apex_available: [
         "//apex_available:anyapex",
         "//apex_available:platform",
-    ],
-}
-
-filegroup {
-    name: "module-utils-os-aidls",
-    srcs: [
-        "java/com/android/modules/utils/ParceledListSlice.aidl",
-        "java/com/android/modules/utils/StringParceledListSlice.aidl",
-    ],
-    path: "java",
-    visibility: [
-        "//frameworks/base/wifi",
-        "//packages/modules/Wifi/framework",
     ],
 }
