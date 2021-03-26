@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 The Android Open Source Project
+// Copyright (C) 2021 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-cc_library_static {
-    name: "libmodules-utils-build",
-    min_sdk_version: "29",
-    export_include_dirs: ["include"],
-    static_libs: ["libbase"],
-    visibility: ["//visibility:public"],
-    apex_available: ["//apex_available:anyapex"],
+// TODO(b/183183152) This build rule should really be alongside the source in
+// com/android/modules/utils/ but cannot be due to b/183183152
+filegroup {
+    name: "module-utils-os-aidls",
+    srcs: [
+        "com/android/modules/utils/ParceledListSlice.aidl",
+        "com/android/modules/utils/StringParceledListSlice.aidl",
+    ],
+    visibility: [
+        "//frameworks/base/wifi",
+        "//packages/modules/Wifi/framework",
+        "//frameworks/libs/modules-utils/java/com/android/modules/utils",
+    ],
 }

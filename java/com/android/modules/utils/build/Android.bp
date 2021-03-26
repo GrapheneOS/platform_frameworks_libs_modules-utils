@@ -18,13 +18,10 @@ package {
 }
 
 java_library {
-    name: "modules-utils-os",
-    srcs: [
-        "java/**/*.aidl",
-        "java/**/*.java",
-    ],
+    name: "modules-utils-build",
+    srcs: ["SdkLevel.java"],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "29",
     visibility: ["//visibility:public"],
     apex_available: [
         "//apex_available:anyapex",
@@ -32,15 +29,15 @@ java_library {
     ],
 }
 
-filegroup {
-    name: "module-utils-os-aidls",
-    srcs: [
-        "java/com/android/modules/utils/ParceledListSlice.aidl",
-        "java/com/android/modules/utils/StringParceledListSlice.aidl",
-    ],
-    path: "java",
-    visibility: [
-        "//frameworks/base/wifi",
-        "//packages/modules/Wifi/framework",
+// For modules which use system sdk
+java_library {
+    name: "modules-utils-build_system",
+    srcs: ["SdkLevel.java"],
+    sdk_version: "system_current",
+    min_sdk_version: "29",
+    visibility: ["//visibility:public"],
+    apex_available: [
+        "//apex_available:anyapex",
+        "//apex_available:platform",
     ],
 }
