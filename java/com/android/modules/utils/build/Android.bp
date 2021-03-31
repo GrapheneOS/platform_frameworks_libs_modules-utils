@@ -20,6 +20,7 @@ package {
 java_library {
     name: "modules-utils-build",
     srcs: ["SdkLevel.java"],
+    libs: ["androidx.annotation_annotation"],
     sdk_version: "module_current",
     min_sdk_version: "29",
     visibility: ["//visibility:public"],
@@ -33,6 +34,7 @@ java_library {
 java_library {
     name: "modules-utils-build_system",
     srcs: ["SdkLevel.java"],
+    libs: ["androidx.annotation_annotation"],
     sdk_version: "system_current",
     min_sdk_version: "29",
     visibility: ["//visibility:public"],
