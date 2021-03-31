@@ -18,6 +18,8 @@ package com.android.modules.utils.build;
 
 import android.os.Build;
 
+import androidx.annotation.ChecksSdkIntAtLeast;
+
 /**
  * Utility class to check SDK level.
  *
@@ -28,6 +30,7 @@ public class SdkLevel {
     private SdkLevel() {}
 
     /** Return true iff the running Android SDK is at least "R". */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.R)
     public static boolean isAtLeastR() {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
     }
@@ -39,6 +42,7 @@ public class SdkLevel {
      * (e.g. if we add SDK version for R-QPR,  the current implementation will not recognise
      * pre-release "S" versions built on that).
      */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CUR_DEVELOPMENT)
     public static boolean isAtLeastS() {
         // TODO(b/170831689) This should check SDK_INT >= S once S sdk finalised. Note that removing the
         // current conditions may lead to issues in mainlinefood (and possibly public beta?).
