@@ -22,33 +22,27 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-import android.app.Activity;
-import android.app.WallpaperManager;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.Display;
-import android.view.LayoutInflater;
-import android.view.WindowManager;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Denotes a {@link Context} that can be used to create UI, meaning that it can provide a
- * {@link Display} via {@link Context#getDisplay} and can be used to obtain a {@link WindowManager},
- * {@link LayoutInflater} or {@link WallpaperManager} via {@link Context#getSystemService(String)}.
- * A {@link Context} which is marked as {@link UiContext} implies that the {@link Context} is also
- * a {@link DisplayContext}.
+ * Denotes a {@link android.content.Context} that can be used to create UI, meaning that it can
+ * provide a {@link android.view.Display} via {@link android.content.Context#getDisplay} and can be
+ * used to obtain a {@link android.view.WindowManager}, {@link android.view.LayoutInflater} or
+ * {@link android.app.WallpaperManager} via
+ * {@link android.content.Context#getSystemService(String)}. A {@link android.content.Context}
+ * which is marked as {@link UiContext} implies that the {@link android.content.Context} is also a
+ * {@link android.view.DisplayContext}.
  * <p>
- * This kind of {@link Context} is usually an {@link Activity} or
- * created via {@link Context#createWindowContext(int, Bundle)}.
+ * This kind of {@link android.content.Context} is usually an {@link android.app.Activity} or
+ * created via {@link android.content.Context#createWindowContext(int, android.os.Bundle)}.
  * </p>
  * This is a marker annotation and has no specific attributes.
  *
- * @see Context#getDisplay()
- * @see Context#getSystemService(String)
- * @see Context#getSystemService(Class)
- * @see Context#createWindowContext(int, Bundle)
+ * @see android.content.Context#getDisplay()
+ * @see android.content.Context#getSystemService(String)
+ * @see android.content.Context#getSystemService(Class)
+ * @see android.content.Context#createWindowContext(int, android.os.Bundle)
  * @see DisplayContext
  * @hide
  */

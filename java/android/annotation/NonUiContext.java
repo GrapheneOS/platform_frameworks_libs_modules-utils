@@ -22,25 +22,21 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-import android.app.WallpaperManager;
-import android.content.Context;
-import android.view.Display;
-import android.view.LayoutInflater;
-import android.view.WindowManager;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Denotes a {@link Context} that <b>can not</b> be used to obtain a {@link Display} via
- * {@link Context#getDisplay} nor to obtain a {@link WindowManager}, {@link LayoutInflater} or
- * {@link WallpaperManager} via {@link Context#getSystemService(String)}.
+ * Denotes a {@link android.content.Context} that <b>can not</b> be used to obtain a
+ * {@link android.view.Display} via {@link android.content.Context#getDisplay} nor to obtain a
+ * {@link android.view.WindowManager}, {@link android.view.LayoutInflater} or
+ * {@link android.app.WallpaperManager} via
+ * {@link android.content.Context#getSystemService(String)}.
  * <p>
  * This is a marker annotation and has no specific attributes.
  *
- * @see Context#getDisplay()
- * @see Context#getSystemService(String)
- * @see Context#getSystemService(Class)
+ * @see android.content.Context#getDisplay()
+ * @see android.content.Context#getSystemService(String)
+ * @see android.content.Context#getSystemService(Class)
  * @hide
  */
 @Retention(SOURCE)
