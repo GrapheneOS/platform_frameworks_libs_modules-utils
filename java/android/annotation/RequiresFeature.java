@@ -21,8 +21,6 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-import android.content.pm.PackageManager;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -46,7 +44,8 @@ public @interface RequiresFeature {
      * multiple parameters, but the feature name parameter must be of type String and must also be
      * the first String-type parameter.
      * <p>
-     * By default, the enforcement is {@link PackageManager#hasSystemFeature(String)}.
+     * By default, the enforcement is
+     * {@link android.content.pm.PackageManager#hasSystemFeature(String)}.
      */
     String enforcement() default("android.content.pm.PackageManager#hasSystemFeature");
 }
