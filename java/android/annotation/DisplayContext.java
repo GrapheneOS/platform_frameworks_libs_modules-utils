@@ -22,35 +22,29 @@ import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
 
-import android.app.Activity;
-import android.app.WallpaperManager;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.Display;
-import android.view.LayoutInflater;
-import android.view.WindowManager;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Denotes a {@link Context} that is tied to a {@link Display} and can be used to obtain one
- * via {@link Context#getDisplay}, but <b>may not</b> be able to obtain {@link WindowManager},
- * {@link LayoutInflater} or {@link WallpaperManager} via {@link Context#getSystemService(String)}.
- * If the UI services mentioned above are required, please use contexts which are marked as
- * {@link UiContext}.
+ * Denotes a {@link android.content.Context} that is tied to a {@link android.view.Display} and can
+ * be used to obtain one via {@link android.content.Context#getDisplay}, but <b>may not</b> be able
+ * to obtain {@link android.view.WindowManager}, {@link android.view.LayoutInflater} or
+ * {@link android.app.WallpaperManager} via
+ * {@link android.content.Context#getSystemService(String)}. If the UI services mentioned above are
+ * required, please use contexts which are marked as {@link UiContext}.
  * <p>
- * {@link Activity}, and the result of {@link Context#createWindowContext(int, Bundle)} or
- * {@link Context#createDisplayContext(Display)} can be
- * used where a {@link DisplayContext} is required.
+ * {@link android.app.Activity}, and the result of
+ * {@link android.content.Context#createWindowContext(int, android.os.Bundle)} or
+ * {@link android.content.Context#createDisplayContext(android.view.Display)} can be used where a
+ * {@link DisplayContext} is required.
  * <p>
  * This is a marker annotation and has no specific attributes.
  *
- * @see Context#getDisplay()
- * @see Context#getSystemService(String)
- * @see Context#getSystemService(Class)
- * @see Context#createDisplayContext(Display)
- * @see Context#createWindowContext(int, Bundle)
+ * @see android.content.Context#getDisplay()
+ * @see android.content.Context#getSystemService(String)
+ * @see android.content.Context#getSystemService(Class)
+ * @see android.content.Context#createDisplayContext(Display)
+ * @see android.content.Context#createWindowContext(int, Bundle)
  * @see UiContext
  * @hide
  */
