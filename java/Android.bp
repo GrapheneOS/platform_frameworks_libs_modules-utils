@@ -17,6 +17,37 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+filegroup {
+    name: "framework-annotations",
+    srcs: [
+        "android/annotation/*.java",
+        "com/android/internal/annotations/*.java",
+    ],
+
+    // TODO: Prune this list
+    visibility: [
+        "//frameworks/base",
+        "//frameworks/base/services/net",
+        "//frameworks/base/tools/processors/intdef_mappings",
+        "//frameworks/libs/net/common",
+        "//packages/apps/CellBroadcastReceiver",
+        "//packages/apps/CellBroadcastReceiver/legacy",
+        "//packages/modules/CellBroadcastService",
+        "//packages/modules/NetworkStack/common/netlinkclient",
+        "//packages/modules/NetworkStack/common/networkstackclient",
+        "//packages/services/Iwlan",
+    ],
+}
+
+java_library {
+    name: "framework-annotations-lib",
+    srcs: [":framework-annotations"],
+    sdk_version: "core_current",
+    visibility: [
+        "//visibility:public",
+    ],
+}
+
 // TODO(b/183183152) This build rule should really be alongside the source in
 // com/android/modules/utils/ but cannot be due to b/183183152
 filegroup {
