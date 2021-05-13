@@ -48,6 +48,19 @@ java_library {
     ],
 }
 
+filegroup {
+    name: "framework-api-annotations",
+    srcs: [
+        "android/annotation/SystemApi.java",
+        "android/annotation/TestApi.java",
+    ],
+
+    visibility: [
+        "//art",
+        "//libcore",
+    ],
+}
+
 // TODO(b/183183152) This build rule should really be alongside the source in
 // com/android/modules/utils/ but cannot be due to b/183183152
 filegroup {
