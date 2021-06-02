@@ -35,25 +35,9 @@ public class SdkLevel {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
     }
 
-    /**
-     * Returns true iff the running Android SDK is pre-release "S" or "T", built based on "R" SDK.
-     *
-     * If new SDK versions are added > R, then this method needs to be updated to recognise them
-     * (e.g. if we add SDK version for R-QPR,  the current implementation will not recognise
-     * pre-release "S" versions built on that).
-     */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CUR_DEVELOPMENT)
+    /** Return true iff the running Android SDK is at least "S". */
+    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.S)
     public static boolean isAtLeastS() {
-        // TODO(b/170831689) This should check SDK_INT >= S once S sdk finalised. Note that removing the
-        // current conditions may lead to issues in mainlinefood (and possibly public beta?).
-
-        // While in development, builds will have R SDK_INT and "S" or "T" codename.
-        // We don't accept SDK_INT > R for now, since R and S may have non-consecutive values.
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R
-            && ("S".equals(Build.VERSION.CODENAME) || "T".equals(Build.VERSION.CODENAME))) {
-            return true;
-        }
-
-        return false;
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S;
     }
 }
