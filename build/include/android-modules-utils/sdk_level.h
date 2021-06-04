@@ -27,20 +27,9 @@ static inline bool IsAtLeastR() {
   return android::base::GetIntProperty("ro.build.version.sdk", -1) >= 30;
 }
 
-// Returns true iff the running Android SDK is pre-release "S" or "T", built
-// based on "R" SDK.
-//
-// If new SDK versions are added > R, then this method needs to be updated to
-// recognise them (e.g. if we add SDK version for R-QPR, the current
-// implementation will not recognise pre-release "S" versions built on that).
+// Return true iff the running Android SDK is at least "S".
 static inline bool IsAtLeastS() {
-  // TODO(b/170831689) This should check SDK_INT >= S once S sdk finalised.
-  // Note that removing the current conditions may lead to issues in
-  // mainlinefood (and possibly public beta?).
-  std::string codename =
-    android::base::GetProperty("ro.build.version.codename", "");
-  return android::base::GetIntProperty("ro.build.version.sdk", -1) == 30 &&
-      (codename == "S" || codename == "T");
+  return android::base::GetIntProperty("ro.build.version.sdk", -1) >= 31;
 }
 
 } // namespace utils
