@@ -16,44 +16,53 @@
 
 package com.android.modules.utils.build;
 
-import android.os.Build;
+import static android.os.Build.VERSION.CODENAME;
+import static android.os.Build.VERSION.SDK_INT;
 
 import androidx.annotation.ChecksSdkIntAtLeast;
+import androidx.annotation.NonNull;
 
 /**
- * Utility class to check SDK level.
+ * Utility class to check SDK level on a device.
  *
  * @hide
  */
-public class SdkLevel {
+public final class SdkLevel {
 
     private SdkLevel() {}
 
-    /** Return true iff the running Android SDK is at least "R". */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.R)
+    /** Checks if the device is running on release version of Android R or newer. */
+    @ChecksSdkIntAtLeast(api = 30 /* Build.VERSION_CODES.R */)
     public static boolean isAtLeastR() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R;
+        return SDK_INT >= 30;
     }
 
     /**
-     * Returns true iff the running Android SDK is pre-release "S" or "T", built based on "R" SDK.
-     *
-     * If new SDK versions are added > R, then this method needs to be updated to recognise them
-     * (e.g. if we add SDK version for R-QPR,  the current implementation will not recognise
-     * pre-release "S" versions built on that).
+     * Checks if the device is running on a pre-release version of Android S or a release version of
+     * Android S or newer.
      */
-    @ChecksSdkIntAtLeast(api = Build.VERSION_CODES.CUR_DEVELOPMENT)
+    @ChecksSdkIntAtLeast(api = 31 /* Build.VERSION_CODES.S */, codename = "S")
     public static boolean isAtLeastS() {
-        // TODO(b/170831689) This should check SDK_INT >= S once S sdk finalised. Note that removing the
-        // current conditions may lead to issues in mainlinefood (and possibly public beta?).
+        return SDK_INT >= 31 || isAtLeastPreReleaseCodename("S");
+    }
 
-        // While in development, builds will have R SDK_INT and "S" or "T" codename.
-        // We don't accept SDK_INT > R for now, since R and S may have non-consecutive values.
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R
-            && ("S".equals(Build.VERSION.CODENAME) || "T".equals(Build.VERSION.CODENAME))) {
-            return true;
+    /**
+     * Checks if the device is running on a pre-release version of Android T or a release version of
+     * Android T or newer.
+     */
+    @ChecksSdkIntAtLeast(codename = "T")
+    public static boolean isAtLeastT() {
+        return isAtLeastPreReleaseCodename("T");
+    }
+
+    private static boolean isAtLeastPreReleaseCodename(@NonNull String codename) {
+        // Special case "REL", which means the build is not a pre-release build.
+        if ("REL".equals(CODENAME)) {
+            return false;
         }
 
-        return false;
+        // Otherwise lexically compare them. Return true if the build codename is equal to or
+        // greater than the requested codename.
+        return CODENAME.compareTo(codename) >= 0;
     }
 }

@@ -17,31 +17,33 @@
 #pragma once
 
 #include <android-base/properties.h>
+#include <android/api-level.h>
 
 namespace android {
 namespace modules {
 namespace sdklevel {
 
-// Return true iff the running Android SDK is at least "R".
-static inline bool IsAtLeastR() {
-  return android::base::GetIntProperty("ro.build.version.sdk", -1) >= 30;
+// Checks if the codename is a matching or higher version than the device's
+// codename.
+static bool IsAtLeastPreReleaseCodename(const std::string &codename) {
+  const std::string &deviceCodename =
+      android::base::GetProperty("ro.build.version.codename", "");
+  return "REL" != deviceCodename && deviceCodename.compare(codename) >= 0;
 }
 
-// Returns true iff the running Android SDK is pre-release "S" or "T", built
-// based on "R" SDK.
-//
-// If new SDK versions are added > R, then this method needs to be updated to
-// recognise them (e.g. if we add SDK version for R-QPR, the current
-// implementation will not recognise pre-release "S" versions built on that).
+// Checks if the device is running on release version of Android R or newer.
+static inline bool IsAtLeastR() { return android_get_device_api_level() >= 30; }
+
+// Checks if the device is running on a pre-release version of Android S or a
+// release version of Android S or newer.
 static inline bool IsAtLeastS() {
-  // TODO(b/170831689) This should check SDK_INT >= S once S sdk finalised.
-  // Note that removing the current conditions may lead to issues in
-  // mainlinefood (and possibly public beta?).
-  std::string codename =
-    android::base::GetProperty("ro.build.version.codename", "");
-  return android::base::GetIntProperty("ro.build.version.sdk", -1) == 30 &&
-      (codename == "S" || codename == "T");
+  return android_get_device_api_level() >= 31 ||
+         IsAtLeastPreReleaseCodename("S");
 }
+
+// Checks if the device is running on a pre-release version of Android T or a
+// release version of Android T or newer.
+static inline bool IsAtLeastT() { return IsAtLeastPreReleaseCodename("T"); }
 
 } // namespace utils
 } // namespace modules
