@@ -17,20 +17,30 @@
 #pragma once
 
 #include <android-base/properties.h>
+#include <android/api-level.h>
 
 namespace android {
 namespace modules {
 namespace sdklevel {
 
-// Return true iff the running Android SDK is at least "R".
-static inline bool IsAtLeastR() {
-  return android::base::GetIntProperty("ro.build.version.sdk", -1) >= 30;
+// Checks if the codename is a matching or higher version than the device's
+// codename.
+static bool IsAtLeastPreReleaseCodename(const std::string &codename) {
+  const std::string &deviceCodename =
+      android::base::GetProperty("ro.build.version.codename", "");
+  return "REL" != deviceCodename && deviceCodename.compare(codename) >= 0;
 }
 
-// Return true iff the running Android SDK is at least "S".
-static inline bool IsAtLeastS() {
-  return android::base::GetIntProperty("ro.build.version.sdk", -1) >= 31;
-}
+// Checks if the device is running on release version of Android R or newer.
+static inline bool IsAtLeastR() { return android_get_device_api_level() >= 30; }
+
+// Checks if the device is running on a pre-release version of Android S or a
+// release version of Android S or newer.
+static inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
+
+// Checks if the device is running on a pre-release version of Android T or a
+// release version of Android T or newer.
+static inline bool IsAtLeastT() { return IsAtLeastPreReleaseCodename("T"); }
 
 } // namespace utils
 } // namespace modules
