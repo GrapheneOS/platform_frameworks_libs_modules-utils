@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,55 +14,57 @@
  * limitations under the License.
  */
 
-package com.android.modules.utils.build;
+package com.android.modules.utils.build.testing;
 
-import static android.os.Build.VERSION.CODENAME;
-import static android.os.Build.VERSION.SDK_INT;
-
-import androidx.annotation.ChecksSdkIntAtLeast;
 import androidx.annotation.NonNull;
 
-/**
- * Utility class to check SDK level on a device.
- *
- * @hide
- */
-public final class SdkLevel {
+import com.android.tradefed.device.DeviceNotAvailableException;
+import com.android.tradefed.device.ITestDevice;
 
-    private SdkLevel() {}
+/**
+ * Utility class to check device SDK level from a host side test.
+ */
+public final class DeviceSdkLevel {
+
+    private final ITestDevice device;
+
+    public DeviceSdkLevel(ITestDevice device) {
+        this.device = device;
+    }
 
     /** Checks if the device is running on release version of Android R or newer. */
-    @ChecksSdkIntAtLeast(api = 30 /* Build.VERSION_CODES.R */)
-    public static boolean isAtLeastR() {
-        return SDK_INT >= 30;
+    public boolean isDeviceAtLeastR() throws DeviceNotAvailableException {
+        return device.getApiLevel() >= 30;
     }
 
     /**
      * Checks if the device is running on a pre-release version of Android S or a release version of
      * Android S or newer.
      */
-    @ChecksSdkIntAtLeast(api = 31 /* Build.VERSION_CODES.S */, codename = "S")
-    public static boolean isAtLeastS() {
-        return SDK_INT >= 31;
+    public boolean isDeviceAtLeastS() throws DeviceNotAvailableException {
+        return device.getApiLevel() >= 31 || isDeviceAtLeastPreReleaseCodename("S");
     }
 
     /**
      * Checks if the device is running on a pre-release version of Android T or a release version of
      * Android T or newer.
      */
-    @ChecksSdkIntAtLeast(codename = "T")
-    public static boolean isAtLeastT() {
-        return isAtLeastPreReleaseCodename("T");
+    public boolean isDeviceAtLeastT() throws DeviceNotAvailableException {
+        return isDeviceAtLeastPreReleaseCodename("T");
     }
 
-    private static boolean isAtLeastPreReleaseCodename(@NonNull String codename) {
+    private boolean isDeviceAtLeastPreReleaseCodename(@NonNull String codename)
+            throws DeviceNotAvailableException {
+        String deviceCodename = device.getProperty("ro.build.version.codename");
+
         // Special case "REL", which means the build is not a pre-release build.
-        if ("REL".equals(CODENAME)) {
+        if ("REL".equals(deviceCodename)) {
             return false;
         }
 
         // Otherwise lexically compare them. Return true if the build codename is equal to or
         // greater than the requested codename.
-        return CODENAME.compareTo(codename) >= 0;
+        return deviceCodename.compareTo(codename) >= 0;
     }
+
 }
