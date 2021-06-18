@@ -41,7 +41,7 @@ public final class SdkLevel {
      * Checks if the device is running on a pre-release version of Android S or a release version of
      * Android S or newer.
      */
-    @ChecksSdkIntAtLeast(api = 10000 /* Build.VERSION_CODES.CUR_DEVELOPMENT */, codename = "S")
+    @ChecksSdkIntAtLeast(api = 31 /* Build.VERSION_CODES.S */, codename = "S")
     public static boolean isAtLeastS() {
         return SDK_INT >= 31 || isAtLeastPreReleaseCodename("S");
     }
