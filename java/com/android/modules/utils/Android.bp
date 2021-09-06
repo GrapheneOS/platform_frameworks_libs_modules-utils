@@ -36,3 +36,40 @@ java_library {
         "//apex_available:platform",
     ],
 }
+
+java_library {
+    name: "modules-utils-handlerexecutor",
+
+    sdk_version: "module_current",
+    min_sdk_version: "29",
+
+    srcs: ["HandlerExecutor.java"],
+    static_libs: ["modules-utils-preconditions"],
+
+    libs: ["framework-annotations-lib"],
+
+    visibility: ["//visibility:public"],
+    apex_available: [
+        "//apex_available:anyapex",
+        // TODO once BT is an apex, remove platform available
+        "//apex_available:platform",
+    ],
+}
+
+java_library {
+    name: "modules-utils-backgroundthread",
+
+    sdk_version: "module_current",
+    min_sdk_version: "29",
+
+    srcs: ["BackgroundThread.java"],
+    static_libs: ["modules-utils-handlerexecutor"],
+
+    libs: ["framework-annotations-lib"],
+
+    visibility: ["//visibility:public"],
+    apex_available: [
+        "//apex_available:anyapex",
+        "//apex_available:platform",
+    ],
+}

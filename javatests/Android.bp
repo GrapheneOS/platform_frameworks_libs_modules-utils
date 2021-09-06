@@ -3,22 +3,21 @@ package {
 }
 
 android_test {
-    name: "modules-utils-os-tests",
+    name: "ModulesUtilsTests",
 
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "29",
 
-    srcs: [
-        "*.java",
-    ],
+    srcs: ["**/*.java"],
 
     static_libs: [
         "modules-utils-os",
+        "modules-utils-backgroundthread",
         "androidx.test.runner",
         "androidx.test.rules",
     ],
 
-    libs: [
-        "android.test.runner",
-    ],
+    libs: ["android.test.runner"],
+
+    test_suites: ["general-tests"],
 }
