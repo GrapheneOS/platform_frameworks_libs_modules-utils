@@ -73,3 +73,20 @@ java_library {
         "//apex_available:platform",
     ],
 }
+
+java_library {
+    name: "modules-utils-bytesmatcher",
+
+    sdk_version: "module_current",
+    min_sdk_version: "29",
+
+    srcs: ["BytesMatcher.java"],
+
+    libs: ["framework-annotations-lib"],
+
+    visibility: ["//visibility:public"],
+    apex_available: [
+        "//apex_available:anyapex",
+        "//apex_available:platform",
+    ],
+}
