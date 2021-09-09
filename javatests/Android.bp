@@ -11,9 +11,10 @@ android_test {
     srcs: ["**/*.java"],
 
     static_libs: [
-        "modules-utils-os",
         "modules-utils-backgroundthread",
         "modules-utils-bytesmatcher",
+        "modules-utils-list-slice",
+        "modules-utils-shell-command-handler",
         "androidx.test.runner",
         "androidx.test.rules",
     ],
