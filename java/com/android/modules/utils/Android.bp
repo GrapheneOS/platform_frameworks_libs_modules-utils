@@ -31,17 +31,25 @@ java_defaults {
 }
 
 java_library {
-    // TODO this rule should be split into smaller, more focused ones,
-    // ideally each would have its own java package too.
     name: "modules-utils-os",
     defaults: ["modules-utils-defaults"],
     min_sdk_version: "30",
-    srcs: [
-        ":module-utils-os-aidls",
-        "BaseParceledListSlice.java",
-        "BasicShellCommandHandler.java",
-        "ParceledListSlice.java",
-        "StringParceledListSlice.java",
+    static_libs: [
+        "modules-utils-list-slice",
+        "modules-utils-shell-command-handler",
+    ],
+    visibility: [
+        // NOTE: Do not add new rules to this list. New users should use the separate libraries it
+        // consists of.
+        "//visibility:override",
+        "//frameworks/base",
+        "//packages/modules/Connectivity/service",
+        "//packages/modules/Permission/service",
+        "//packages/modules/Scheduling/service",
+        "//packages/modules/Wifi/framework",
+        "//packages/modules/Wifi/service",
+        "//packages/services/Car/service",
+        "//packages/services/Telephony",
     ],
 }
 
@@ -63,4 +71,22 @@ java_library {
     name: "modules-utils-bytesmatcher",
     defaults: ["modules-utils-defaults"],
     srcs: ["BytesMatcher.java"],
+}
+
+java_library {
+    name: "modules-utils-list-slice",
+    defaults: ["modules-utils-defaults"],
+    srcs: [
+        ":module-utils-os-aidls",
+        "BaseParceledListSlice.java",
+        "ParceledListSlice.java",
+        "StringParceledListSlice.java",
+    ],
+    min_sdk_version: "30",
+}
+
+java_library {
+    name: "modules-utils-shell-command-handler",
+    defaults: ["modules-utils-defaults"],
+    srcs: ["BasicShellCommandHandler.java"],
 }
