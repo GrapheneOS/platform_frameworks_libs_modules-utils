@@ -17,10 +17,25 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+java_defaults {
+    name: "modules-utils-defaults",
+    sdk_version: "module_current",
+    min_sdk_version: "29",
+    libs: ["framework-annotations-lib"],
+    visibility: ["//visibility:public"],
+    apex_available: [
+        "//apex_available:anyapex",
+        "//apex_available:platform",
+    ],
+    defaults_visibility: [":__subpackages__"],
+}
+
 java_library {
     // TODO this rule should be split into smaller, more focused ones,
     // ideally each would have its own java package too.
     name: "modules-utils-os",
+    defaults: ["modules-utils-defaults"],
+    min_sdk_version: "30",
     srcs: [
         ":module-utils-os-aidls",
         "BaseParceledListSlice.java",
@@ -28,65 +43,24 @@ java_library {
         "ParceledListSlice.java",
         "StringParceledListSlice.java",
     ],
-    sdk_version: "module_current",
-    min_sdk_version: "30",
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        "//apex_available:platform",
-    ],
 }
 
 java_library {
     name: "modules-utils-handlerexecutor",
-
-    sdk_version: "module_current",
-    min_sdk_version: "29",
-
+    defaults: ["modules-utils-defaults"],
     srcs: ["HandlerExecutor.java"],
     static_libs: ["modules-utils-preconditions"],
-
-    libs: ["framework-annotations-lib"],
-
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        // TODO once BT is an apex, remove platform available
-        "//apex_available:platform",
-    ],
 }
 
 java_library {
     name: "modules-utils-backgroundthread",
-
-    sdk_version: "module_current",
-    min_sdk_version: "29",
-
+    defaults: ["modules-utils-defaults"],
     srcs: ["BackgroundThread.java"],
     static_libs: ["modules-utils-handlerexecutor"],
-
-    libs: ["framework-annotations-lib"],
-
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        "//apex_available:platform",
-    ],
 }
 
 java_library {
     name: "modules-utils-bytesmatcher",
-
-    sdk_version: "module_current",
-    min_sdk_version: "29",
-
+    defaults: ["modules-utils-defaults"],
     srcs: ["BytesMatcher.java"],
-
-    libs: ["framework-annotations-lib"],
-
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        "//apex_available:platform",
-    ],
 }
