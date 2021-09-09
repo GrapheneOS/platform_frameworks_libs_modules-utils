@@ -13,6 +13,7 @@ android_test {
     static_libs: [
         "modules-utils-os",
         "modules-utils-backgroundthread",
+        "modules-utils-bytesmatcher",
         "androidx.test.runner",
         "androidx.test.rules",
     ],
