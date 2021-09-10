@@ -19,27 +19,16 @@ package {
 
 java_library {
     name: "modules-utils-build",
+    defaults: ["modules-utils-defaults"],
     srcs: ["SdkLevel.java"],
     libs: ["androidx.annotation_annotation"],
-    sdk_version: "module_current",
-    min_sdk_version: "29",
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        "//apex_available:platform",
-    ],
 }
 
 // For modules which use system sdk
 java_library {
     name: "modules-utils-build_system",
+    defaults: ["modules-utils-defaults"],
     srcs: ["SdkLevel.java"],
     libs: ["androidx.annotation_annotation"],
     sdk_version: "system_current",
-    min_sdk_version: "29",
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        "//apex_available:platform",
-    ],
 }
