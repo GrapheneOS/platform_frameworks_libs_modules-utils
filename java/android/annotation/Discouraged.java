@@ -48,6 +48,6 @@ public @interface Discouraged {
      * Defines the message to display when an element marked with this annotation is used. An
      * alternative should be provided in the message.
      */
-    String message() default "";
+    String message();
 }
 
