@@ -57,7 +57,6 @@ java_library {
     name: "modules-utils-handlerexecutor",
     defaults: ["modules-utils-defaults"],
     srcs: ["HandlerExecutor.java"],
-    static_libs: ["modules-utils-preconditions"],
 }
 
 java_library {
