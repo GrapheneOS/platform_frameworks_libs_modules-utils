@@ -20,7 +20,7 @@ package {
 filegroup {
     name: "framework-annotations",
     srcs: [
-        "android/annotation/*.java",
+        ":framework-metalava-annotations",
         "com/android/internal/annotations/*.java",
     ],
 
@@ -36,6 +36,18 @@ filegroup {
         "//packages/modules/NetworkStack/common/netlinkclient",
         "//packages/modules/NetworkStack/common/networkstackclient",
         "//packages/services/Iwlan",
+    ],
+}
+
+filegroup {
+    name: "framework-metalava-annotations",
+    srcs: ["android/annotation/*.java"],
+    visibility: [
+        // This group of files is needed by any metalava invocation that enabled enhancement of
+        // documentation (via javadoc tags like @paramDoc and @returnDoc). They are public for
+        // this purpose. However, java compilation should generally depend (dynamically) on
+        // framework-annotations-lib instead.
+        "//visibility:public",
     ],
 }
 
@@ -88,4 +100,3 @@ filegroup {
         "//frameworks/base/core/java",
     ],
 }
-
