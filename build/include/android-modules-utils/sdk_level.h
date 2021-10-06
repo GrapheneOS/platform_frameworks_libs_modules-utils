@@ -36,10 +36,7 @@ static inline bool IsAtLeastR() { return android_get_device_api_level() >= 30; }
 
 // Checks if the device is running on a pre-release version of Android S or a
 // release version of Android S or newer.
-static inline bool IsAtLeastS() {
-  return android_get_device_api_level() >= 31 ||
-         IsAtLeastPreReleaseCodename("S");
-}
+static inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
 
 // Checks if the device is running on a pre-release version of Android T or a
 // release version of Android T or newer.
