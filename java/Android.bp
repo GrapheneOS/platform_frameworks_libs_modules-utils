@@ -63,6 +63,7 @@ java_library {
 filegroup {
     name: "framework-api-annotations",
     srcs: [
+        "android/annotation/Discouraged.java",
         "android/annotation/SystemApi.java",
         "android/annotation/TestApi.java",
     ],
