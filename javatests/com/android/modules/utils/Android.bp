@@ -15,5 +15,26 @@
 
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
-    default_visibility: [":__subpackages__"],
+}
+
+android_test {
+    name: "ModulesUtilsTests",
+
+    sdk_version: "module_current",
+    min_sdk_version: "29",
+
+    srcs: ["*.java"],
+
+    static_libs: [
+        "modules-utils-backgroundthread",
+        "modules-utils-bytesmatcher",
+        "modules-utils-list-slice",
+        "modules-utils-shell-command-handler",
+        "androidx.test.runner",
+        "androidx.test.rules",
+    ],
+
+    libs: ["android.test.runner"],
+
+    test_suites: ["general-tests"],
 }
