@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 The Android Open Source Project
+// Copyright (C) 2021 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,22 +17,15 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_defaults {
-    name: "modules-utils-build-defaults",
-    defaults: ["modules-utils-defaults"],
-    srcs: ["*.java"],
-    libs: ["androidx.annotation_annotation"],
-    defaults_visibility: ["//visibility:private"],
-}
-
-java_library {
-    name: "modules-utils-build",
-    defaults: ["modules-utils-build-defaults"],
-}
-
-// For modules which use system sdk
-java_library {
-    name: "modules-utils-build_system",
-    defaults: ["modules-utils-build-defaults"],
-    sdk_version: "system_current",
+android_test {
+    name: "UnboundedSdkLevelTest",
+    srcs: ["UnboundedSdkLevelTest.java"],
+    static_libs: [
+        "androidx.test.core",
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "modules-utils-build",
+        "truth-prebuilt",
+    ],
+    test_suites: ["general-tests"],
 }
