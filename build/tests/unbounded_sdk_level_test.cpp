@@ -68,7 +68,6 @@ TEST_F(UnboundedSdkLevelTest, CodenameVersionsTest) {
   EXPECT_TRUE(IsAtLeast("Tiramisu"));
 
   EXPECT_FALSE(IsAtLeast("Zzz"));
-  EXPECT_FALSE(IsAtLeast("current"));
 
   EXPECT_FALSE(IsAtMost("R"));
   EXPECT_FALSE(IsAtMost("S"));
@@ -76,7 +75,6 @@ TEST_F(UnboundedSdkLevelTest, CodenameVersionsTest) {
   EXPECT_TRUE(IsAtMost("Tiramisu"));
 
   EXPECT_TRUE(IsAtMost("Zzz"));
-  EXPECT_TRUE(IsAtMost("current"));
 }
 
 TEST_F(UnboundedSdkLevelDeathTest, IsAtLeast_EmptyVersionDeathTest) {
@@ -85,6 +83,14 @@ TEST_F(UnboundedSdkLevelDeathTest, IsAtLeast_EmptyVersionDeathTest) {
 
 TEST_F(UnboundedSdkLevelDeathTest, IsAtMost_EmptyVersionDeathTest) {
   EXPECT_DEATH(IsAtMost(""), "");
+}
+
+TEST_F(UnboundedSdkLevelDeathTest, IsAtLeast_CurrentVersionDeathTest) {
+  EXPECT_DEATH(IsAtLeast("current"), "");
+}
+
+TEST_F(UnboundedSdkLevelDeathTest, IsAtMost_CurrentVersionDeathTest) {
+  EXPECT_DEATH(IsAtMost("current"), "");
 }
 
 } // namespace unbounded
