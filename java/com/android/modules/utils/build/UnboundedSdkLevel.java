@@ -98,8 +98,8 @@ public final class UnboundedSdkLevel {
         if (version.length() == 0) {
             throw new IllegalArgumentException();
         }
-        // Assume Android codenames do not start with a digit
-        return !Character.isDigit(version.charAt(0));
+        // assume Android codenames start with upper case letters.
+        return Character.isUpperCase((version.charAt(0)));
     }
 
 }
