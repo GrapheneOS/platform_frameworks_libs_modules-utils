@@ -34,7 +34,7 @@ static inline auto getVersionInt(const std::string &version) {
 
 static inline bool isCodename(const std::string &version) {
   CHECK(version.size() > 0);
-  return !std::isdigit(version.at(0));
+  return std::isupper(version.at(0));
 }
 
 // Checks if the device is running a specific version or newer.
