@@ -44,10 +44,17 @@ TEST_F(UnboundedSdkLevelTest, IntegerVersionsTest) {
 
   EXPECT_FALSE(IsAtLeast(std::to_string(device_api_level_ + 1)));
   EXPECT_FALSE(IsAtLeast(std::to_string(__ANDROID_API_FUTURE__)));
-}
 
-TEST_F(UnboundedSdkLevelDeathTest, EmptyVersionDeathTest) {
-  EXPECT_DEATH(IsAtLeast(""), "");
+  EXPECT_FALSE(IsAtMost("1"));
+  EXPECT_FALSE(IsAtMost("30"));
+  if ("REL" == device_codename_) {
+    EXPECT_TRUE(IsAtMost(std::to_string(device_api_level_)));
+  } else {
+    EXPECT_FALSE(IsAtMost(std::to_string(device_api_level_)));
+  }
+
+  EXPECT_TRUE(IsAtMost(std::to_string(device_api_level_ + 1)));
+  EXPECT_TRUE(IsAtMost(std::to_string(__ANDROID_API_FUTURE__)));
 }
 
 TEST_F(UnboundedSdkLevelTest, CodenameVersionsTest) {
@@ -62,6 +69,22 @@ TEST_F(UnboundedSdkLevelTest, CodenameVersionsTest) {
 
   EXPECT_FALSE(IsAtLeast("Zzz"));
   EXPECT_FALSE(IsAtLeast("current"));
+
+  EXPECT_FALSE(IsAtMost("R"));
+  EXPECT_FALSE(IsAtMost("S"));
+  EXPECT_FALSE(IsAtMost("Sv2"));
+  EXPECT_TRUE(IsAtMost("Tiramisu"));
+
+  EXPECT_TRUE(IsAtMost("Zzz"));
+  EXPECT_TRUE(IsAtMost("current"));
+}
+
+TEST_F(UnboundedSdkLevelDeathTest, IsAtLeast_EmptyVersionDeathTest) {
+  EXPECT_DEATH(IsAtLeast(""), "");
+}
+
+TEST_F(UnboundedSdkLevelDeathTest, IsAtMost_EmptyVersionDeathTest) {
+  EXPECT_DEATH(IsAtMost(""), "");
 }
 
 } // namespace unbounded
