@@ -58,9 +58,9 @@ public class UnboundedSdkLevelTest {
         assertThat(sdkLevel.isAtLeastInternal("Sv2")).isTrue();
         assertThat(sdkLevel.isAtLeastInternal("Tiramisu")).isFalse();
         assertThat(sdkLevel.isAtLeastInternal("U")).isFalse();
-        assertThat(sdkLevel.isAtLeastInternal("current")).isFalse();
 
         assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal("current"));
 
         assertThat(sdkLevel.isAtMostInternal("30")).isFalse();
         assertThat(sdkLevel.isAtMostInternal("31")).isFalse();
@@ -71,9 +71,9 @@ public class UnboundedSdkLevelTest {
         assertThat(sdkLevel.isAtMostInternal("Sv2")).isTrue();
         assertThat(sdkLevel.isAtMostInternal("Tiramisu")).isTrue();
         assertThat(sdkLevel.isAtMostInternal("U")).isTrue();
-        assertThat(sdkLevel.isAtMostInternal("current")).isTrue();
 
         assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal("current"));
     }
 
     @Test
@@ -88,9 +88,9 @@ public class UnboundedSdkLevelTest {
         assertThat(sdkLevel.isAtLeastInternal("Sv2")).isTrue();
         assertThat(sdkLevel.isAtLeastInternal("Tiramisu")).isTrue();
         assertThat(sdkLevel.isAtLeastInternal("U")).isFalse();
-        assertThat(sdkLevel.isAtLeastInternal("current")).isFalse();
 
         assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal("current"));
 
         assertThat(sdkLevel.isAtMostInternal("30")).isFalse();
         assertThat(sdkLevel.isAtMostInternal("31")).isFalse();
@@ -101,9 +101,9 @@ public class UnboundedSdkLevelTest {
         assertThat(sdkLevel.isAtMostInternal("Sv2")).isFalse();
         assertThat(sdkLevel.isAtMostInternal("Tiramisu")).isTrue();
         assertThat(sdkLevel.isAtMostInternal("U")).isTrue();
-        assertThat(sdkLevel.isAtMostInternal("current")).isTrue();
 
         assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal("current"));
     }
 
 }
