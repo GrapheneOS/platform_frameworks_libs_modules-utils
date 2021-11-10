@@ -37,6 +37,13 @@ public final class UnboundedSdkLevel {
         return sInstance.isAtLeastInternal(version);
     }
 
+    /**
+     * Checks if the device is running on a given or older version of Android.
+     */
+    public static boolean isAtMost(@NonNull String version) {
+        return sInstance.isAtMostInternal(version);
+    }
+
     private static final UnboundedSdkLevel sInstance =
             new UnboundedSdkLevel(Build.VERSION.SDK_INT, Build.VERSION.CODENAME);
 
@@ -56,20 +63,43 @@ public final class UnboundedSdkLevel {
         if (mIsReleaseBuild) {
             // On release builds we only expect to install artifacts meant for released
             // Android Versions. No codenames.
-            int versionInt = Integer.parseInt(version);
-            return mSdkInt >= versionInt;
+            return mSdkInt >= Integer.parseInt(version);
         }
+        if (isCodename(version)) {
+            return mCodename.compareTo(version) >= 0;
+        }
+        // Never assume what the next SDK level is until SDK finalization completes.
+        // SDK_INT is always assigned the latest finalized value of the SDK.
+        return mSdkInt >= Integer.parseInt(version);
+    }
+
+    @VisibleForTesting
+    boolean isAtMostInternal(@NonNull String version) {
+        if (mIsReleaseBuild) {
+            // On release builds we only expect to install artifacts meant for released
+            // Android Versions. No codenames.
+            return mSdkInt <= Integer.parseInt(version);
+        }
+        if (isCodename(version)) {
+            return mCodename.compareTo(version) <= 0;
+        }
+        // Never assume what the next SDK level is until SDK finalization completes.
+        // SDK_INT is always assigned the latest finalized value of the SDK.
+        //
+        // Note: multiple releases can be in development at the same time. For example, during
+        // Sv2 and Tiramisu development, both builds have SDK_INT=31 which is not a sufficient
+        // information to differentiate between them. Also, "31" at that point already corresponds
+        // to a previously finalized API level, meaning that the current build is not at most "31".
+        // This is why the comparison is strict, instead of <=.
+        return mSdkInt < Integer.parseInt(version);
+    }
+
+    private boolean isCodename(String version) {
         if (version.length() == 0) {
             throw new IllegalArgumentException();
         }
         // Assume Android codenames do not start with a digit
-        if (Character.isDigit(version.charAt(0))) {
-            // Never assume what the next SDK level is until SDK finalization completes.
-            // SDK_INT is always assigned the latest finalized value of the SDK.
-            int versionInt = Integer.parseInt(version);
-            return mSdkInt >= versionInt;
-        }
-        return mCodename.compareTo(version) >= 0;
+        return !Character.isDigit(version.charAt(0));
     }
 
 }

@@ -25,6 +25,18 @@ namespace modules {
 namespace sdklevel {
 namespace unbounded {
 
+static inline auto getVersionInt(const std::string &version) {
+  std::size_t processed_chars = 0;
+  const int versionInt = std::stoi(version, &processed_chars);
+  CHECK(processed_chars == version.size());
+  return versionInt;
+}
+
+static inline bool isCodename(const std::string &version) {
+  CHECK(version.size() > 0);
+  return !std::isdigit(version.at(0));
+}
+
 // Checks if the device is running a specific version or newer.
 // Always use specific methods IsAtLeast*() available in sdk_level.h when the
 // version is known at build time. This should only be used when a dynamic
@@ -33,20 +45,28 @@ static inline bool IsAtLeast(const std::string &version) {
   const std::string &device_codename =
       android::base::GetProperty("ro.build.version.codename", "");
   if ("REL" == device_codename) {
-    std::size_t processed_chars = 0;
-    const int versionInt = std::stoi(version, &processed_chars);
-    CHECK(processed_chars == version.size());
-    return android_get_device_api_level() >= versionInt;
-  } else {
-    CHECK(version.size() > 0);
-    if (std::isdigit(version.at(0))) {
-      std::size_t processed_chars = 0;
-      const int versionInt = std::stoi(version, &processed_chars);
-      CHECK(processed_chars == version.size());
-      return android_get_device_api_level() >= versionInt;
-    }
+    return android_get_device_api_level() >= getVersionInt(version);
+  }
+  if (isCodename(version)) {
     return device_codename.compare(version) >= 0;
   }
+  return android_get_device_api_level() >= getVersionInt(version);
+}
+
+// Checks if the device is running a specific version or older.
+// Always use specific methods IsAtLeast*() available in sdk_level.h when the
+// version is known at build time. This should only be used when a dynamic
+// runtime check is needed.
+static inline bool IsAtMost(const std::string &version) {
+  const std::string &device_codename =
+      android::base::GetProperty("ro.build.version.codename", "");
+  if ("REL" == device_codename) {
+    return android_get_device_api_level() <= getVersionInt(version);
+  }
+  if (isCodename(version)) {
+    return device_codename.compare(version) <= 0;
+  }
+  return android_get_device_api_level() < getVersionInt(version);
 }
 
 } // namespace unbounded
