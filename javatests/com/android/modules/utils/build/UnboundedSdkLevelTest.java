@@ -37,6 +37,13 @@ public class UnboundedSdkLevelTest {
 
         assertThrows(NumberFormatException.class, () -> sdkLevel.isAtLeastInternal(""));
         assertThrows(NumberFormatException.class, () -> sdkLevel.isAtLeastInternal("S"));
+
+        assertThat(sdkLevel.isAtMostInternal("30")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("31")).isTrue();
+        assertThat(sdkLevel.isAtMostInternal("32")).isTrue();
+
+        assertThrows(NumberFormatException.class, () -> sdkLevel.isAtMostInternal(""));
+        assertThrows(NumberFormatException.class, () -> sdkLevel.isAtMostInternal("S"));
     }
 
     @Test
@@ -51,9 +58,22 @@ public class UnboundedSdkLevelTest {
         assertThat(sdkLevel.isAtLeastInternal("Sv2")).isTrue();
         assertThat(sdkLevel.isAtLeastInternal("Tiramisu")).isFalse();
         assertThat(sdkLevel.isAtLeastInternal("U")).isFalse();
-        assertThat(sdkLevel.isAtLeastInternal("current")).isFalse();
 
         assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal("current"));
+
+        assertThat(sdkLevel.isAtMostInternal("30")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("31")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("32")).isTrue();
+
+        assertThat(sdkLevel.isAtMostInternal("R")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("S")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("Sv2")).isTrue();
+        assertThat(sdkLevel.isAtMostInternal("Tiramisu")).isTrue();
+        assertThat(sdkLevel.isAtMostInternal("U")).isTrue();
+
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal("current"));
     }
 
     @Test
@@ -68,9 +88,22 @@ public class UnboundedSdkLevelTest {
         assertThat(sdkLevel.isAtLeastInternal("Sv2")).isTrue();
         assertThat(sdkLevel.isAtLeastInternal("Tiramisu")).isTrue();
         assertThat(sdkLevel.isAtLeastInternal("U")).isFalse();
-        assertThat(sdkLevel.isAtLeastInternal("current")).isFalse();
 
         assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtLeastInternal("current"));
+
+        assertThat(sdkLevel.isAtMostInternal("30")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("31")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("32")).isTrue();
+
+        assertThat(sdkLevel.isAtMostInternal("R")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("S")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("Sv2")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("Tiramisu")).isTrue();
+        assertThat(sdkLevel.isAtMostInternal("U")).isTrue();
+
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal(""));
+        assertThrows(IllegalArgumentException.class, () -> sdkLevel.isAtMostInternal("current"));
     }
 
 }
