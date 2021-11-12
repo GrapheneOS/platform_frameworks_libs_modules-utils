@@ -17,18 +17,33 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library {
-    name: "modules-utils-preconditions",
-    srcs: ["Preconditions.java"],
-    libs: [
-        "framework-annotations-lib",
-        "unsupportedappusage",
-    ],
+android_test {
+    name: "ModulesUtilsTestingTests",
+
     sdk_version: "module_current",
     min_sdk_version: "29",
-    visibility: ["//visibility:public"],
-    apex_available: [
-        "//apex_available:anyapex",
-        "//apex_available:platform",
+
+    defaults: [
+        "modules-utils-testable-device-config-defaults",
+    ],
+
+    srcs: ["*.java"],
+
+    static_libs: [
+        "androidx.test.core",
+        "androidx.test.runner",
+        "androidx.test.rules",
+        "platform-test-annotations",
+        "truth-prebuilt",
+    ],
+
+    libs: [
+        "android.test.mock",
+        "android.test.runner",
+    ],
+
+    test_suites: [
+        "general-tests",
+        "mts",
     ],
 }
