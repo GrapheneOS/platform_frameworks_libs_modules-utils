@@ -89,6 +89,18 @@ filegroup {
     ],
 }
 
+filegroup {
+    name: "modules-utils-synchronous-result-receiver-aidl",
+    srcs: [
+        "com/android/modules/utils/ISynchronousResultReceiver.aidl",
+        "com/android/modules/utils/SynchronousResultReceiver.aidl",
+    ],
+    visibility: [
+        "//frameworks/libs/modules-utils/java/com/android/modules/utils",
+        "//packages/modules/Bluetooth/system/binder",
+    ],
+}
+
 // This file group is deprecated; new users should use modules-utils-preconditions
 filegroup {
     name: "modules-utils-preconditions-srcs",
