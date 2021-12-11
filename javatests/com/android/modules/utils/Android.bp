@@ -26,12 +26,13 @@ android_test {
     srcs: ["*.java"],
 
     static_libs: [
+        "androidx.test.rules",
+        "androidx.test.runner",
         "modules-utils-backgroundthread",
         "modules-utils-bytesmatcher",
         "modules-utils-list-slice",
         "modules-utils-shell-command-handler",
-        "androidx.test.runner",
-        "androidx.test.rules",
+        "modules-utils-synchronous-result-receiver",
     ],
 
     libs: ["android.test.runner"],
