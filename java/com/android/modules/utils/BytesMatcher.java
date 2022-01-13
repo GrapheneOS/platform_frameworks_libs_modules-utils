@@ -18,7 +18,6 @@ package com.android.modules.utils;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.bluetooth.BluetoothUuid;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -36,8 +35,7 @@ import java.util.function.Predicate;
  * might accept that same value, or vice versa.
  * <p>
  * Matchers can contain rules of varying lengths, and tested values will only be
- * matched against rules of the exact same length. This is designed to support
- * {@link BluetoothUuid} style values which can be variable length.
+ * matched against rules of the exact same length.
  *
  * @hide
  */
