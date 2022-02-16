@@ -40,9 +40,15 @@ public final class SdkLevel {
     }
 
     /** Checks if the device is running on a release version of Android S or newer. */
-    @ChecksSdkIntAtLeast(api = 31 /* Build.VERSION_CODES.S */, codename = "S")
+    @ChecksSdkIntAtLeast(api = 31 /* Build.VERSION_CODES.S */)
     public static boolean isAtLeastS() {
         return SDK_INT >= 31;
+    }
+
+    /** Checks if the device is running on a release version of Android S_V2 or newer */
+    @ChecksSdkIntAtLeast(api = 32 /* BUILD.VERSION_CODES.Sv2 */)
+    public static boolean isAtLeastSv2() {
+        return SDK_INT >= 32;
     }
 
     /**
