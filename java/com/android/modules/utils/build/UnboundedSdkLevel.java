@@ -18,12 +18,12 @@ package com.android.modules.utils.build;
 
 import android.os.Build;
 import android.util.ArraySet;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -48,14 +48,31 @@ public final class UnboundedSdkLevel {
         return sInstance.isAtMostInternal(version);
     }
 
+    private static final SparseArray<ArraySet<String>> PREVIOUS_CODENAMES = new SparseArray<>(4);
+
+    private static final ArraySet<String> setOf(String... elements) {
+        ArraySet<String> result = new ArraySet<>(elements.length);
+        for (String element: elements) {
+            result.add(element);
+        }
+        return result;
+    }
+
+    static {
+        PREVIOUS_CODENAMES.put(29, setOf("Q"));
+        PREVIOUS_CODENAMES.put(30, setOf("Q", "R"));
+        PREVIOUS_CODENAMES.put(31, setOf("Q", "R", "S"));
+        PREVIOUS_CODENAMES.put(32, setOf("Q", "R", "S", "Sv2"));
+    }
+
     private static final UnboundedSdkLevel sInstance =
             new UnboundedSdkLevel(
                     Build.VERSION.SDK_INT,
                     Build.VERSION.CODENAME,
                     SdkLevel.isAtLeastT()
                             // Build.VERSION.KNOWN_CODENAMES
-                            ? new ArraySet<>(new String[]{"Q", "R", "S", "Sv2", "Tiramisu"})
-                            : Collections.emptySet());
+                            ? setOf("Q", "R", "S", "Sv2", "Tiramisu")
+                            : PREVIOUS_CODENAMES.get(Build.VERSION.SDK_INT));
 
     private final int mSdkInt;
     private final String mCodename;
