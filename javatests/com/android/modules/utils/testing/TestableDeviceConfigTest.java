@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.platform.test.annotations.Presubmit;
 import android.provider.DeviceConfig;
+import android.provider.DeviceConfig.BadConfigException;
 import android.provider.DeviceConfig.Properties;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -92,6 +93,30 @@ public class TestableDeviceConfigTest {
     }
 
     @Test
+    public void setProperties() throws BadConfigException {
+        String newKey = "key2";
+        String newValue = "value2";
+        DeviceConfig.setProperties(new Properties.Builder(sNamespace).setString(sKey,
+                sValue).setString(newKey, newValue).build());
+        assertThat(DeviceConfig.getProperty(sNamespace, sKey)).isEqualTo(sValue);
+        assertThat(DeviceConfig.getProperty(sNamespace, newKey)).isEqualTo(newValue);
+    }
+
+    @Test
+    public void deleteProperty() {
+        DeviceConfig.setProperty(sNamespace, sKey, sValue, false);
+        assertThat(DeviceConfig.getProperty(sNamespace, sKey)).isEqualTo(sValue);
+        DeviceConfig.deleteProperty(sNamespace, sKey);
+        assertThat(DeviceConfig.getProperty(sNamespace, sKey)).isNull();
+        String newNamespace = "namespace2";
+        String newValue = "value2";
+        DeviceConfig.setProperty(newNamespace, sKey, newValue, false);
+        assertThat(DeviceConfig.getProperty(newNamespace, sKey)).isEqualTo(newValue);
+        DeviceConfig.deleteProperty(newNamespace, sKey);
+        assertThat(DeviceConfig.getProperty(newNamespace, sKey)).isNull();
+    }
+
+    @Test
     public void getProperties_empty() {
         String newKey = "key2";
         String newValue = "value2";
@@ -131,13 +156,12 @@ public class TestableDeviceConfigTest {
     }
 
     @Test
-    public void testListener() throws InterruptedException {
+    public void testListener_setProperty() throws InterruptedException {
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         OnPropertiesChangedListener changeListener = (properties) -> {
             assertThat(properties.getNamespace()).isEqualTo(sNamespace);
-            assertThat(properties.getKeyset().size()).isEqualTo(1);
-            assertThat(properties.getKeyset()).contains(sKey);
+            assertThat(properties.getKeyset()).containsExactly(sKey);
             assertThat(properties.getString(sKey, "bogus_value")).isEqualTo(sValue);
             assertThat(properties.getString("bogus_key", "bogus_value")).isEqualTo("bogus_value");
             countDownLatch.countDown();
@@ -153,6 +177,52 @@ public class TestableDeviceConfigTest {
         }
     }
 
-}
+    @Test
+    public void testListener_setProperties() throws BadConfigException, InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        String newKey = "key2";
+        String newValue = "value2";
 
+        OnPropertiesChangedListener changeListener = (properties) -> {
+            assertThat(properties.getNamespace()).isEqualTo(sNamespace);
+            assertThat(properties.getKeyset()).containsExactly(sKey, newKey);
+            assertThat(properties.getString(sKey, "bogus_value")).isEqualTo(sValue);
+            assertThat(properties.getString(newKey, "bogus_value")).isEqualTo(newValue);
+            assertThat(properties.getString("bogus_key", "bogus_value")).isEqualTo("bogus_value");
+            countDownLatch.countDown();
+        };
+        try {
+            DeviceConfig.addOnPropertiesChangedListener(sNamespace,
+                    ApplicationProvider.getApplicationContext().getMainExecutor(), changeListener);
+            DeviceConfig.setProperties(new Properties.Builder(sNamespace).setString(sKey,
+                    sValue).setString(newKey, newValue).build());
+            assertThat(countDownLatch.await(
+                    WAIT_FOR_PROPERTY_CHANGE_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)).isTrue();
+        } finally {
+            DeviceConfig.removeOnPropertiesChangedListener(changeListener);
+        }
+    }
+
+    @Test
+    public void testListener_deleteProperty() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        OnPropertiesChangedListener changeListener = (properties) -> {
+            assertThat(properties.getNamespace()).isEqualTo(sNamespace);
+            assertThat(properties.getKeyset()).containsExactly(sKey);
+            assertThat(properties.getString(sKey, "bogus_value")).isEqualTo("bogus_value");
+            assertThat(properties.getString("bogus_key", "bogus_value")).isEqualTo("bogus_value");
+            countDownLatch.countDown();
+        };
+        try {
+            DeviceConfig.addOnPropertiesChangedListener(sNamespace,
+                    ApplicationProvider.getApplicationContext().getMainExecutor(), changeListener);
+            DeviceConfig.deleteProperty(sNamespace, sKey);
+            assertThat(countDownLatch.await(
+                    WAIT_FOR_PROPERTY_CHANGE_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)).isTrue();
+        } finally {
+            DeviceConfig.removeOnPropertiesChangedListener(changeListener);
+        }
+    }
+}
 
