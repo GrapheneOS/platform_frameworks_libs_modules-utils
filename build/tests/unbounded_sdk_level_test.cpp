@@ -16,11 +16,18 @@
 
 #include "android-modules-utils/sdk_level.h"
 #include "android-modules-utils/unbounded_sdk_level.h"
+#include <android-base/properties.h>
 #include <gtest/gtest.h>
 
 namespace android {
 namespace modules {
 namespace sdklevel {
+
+namespace nostl {
+bool IsAtLeast(const char *);
+bool IsAtMost(const char *);
+} // namespace nostl
+
 namespace unbounded {
 
 class UnboundedSdkLevelTest : public ::testing::Test {
@@ -40,21 +47,21 @@ using UnboundedSdkLevelDeathTest = UnboundedSdkLevelTest;
 TEST_F(UnboundedSdkLevelTest, IntegerVersionsTest) {
   EXPECT_TRUE(IsAtLeast("1"));
   EXPECT_TRUE(IsAtLeast("31"));
-  EXPECT_TRUE(IsAtLeast(std::to_string(device_api_level_)));
+  EXPECT_TRUE(IsAtLeast(std::to_string(device_api_level_).c_str()));
 
-  EXPECT_FALSE(IsAtLeast(std::to_string(device_api_level_ + 1)));
-  EXPECT_FALSE(IsAtLeast(std::to_string(__ANDROID_API_FUTURE__)));
+  EXPECT_FALSE(IsAtLeast(std::to_string(device_api_level_ + 1).c_str()));
+  EXPECT_FALSE(IsAtLeast(std::to_string(__ANDROID_API_FUTURE__).c_str()));
 
   EXPECT_FALSE(IsAtMost("1"));
   EXPECT_FALSE(IsAtMost("30"));
   if ("REL" == device_codename_) {
-    EXPECT_TRUE(IsAtMost(std::to_string(device_api_level_)));
+    EXPECT_TRUE(IsAtMost(std::to_string(device_api_level_).c_str()));
   } else {
-    EXPECT_FALSE(IsAtMost(std::to_string(device_api_level_)));
+    EXPECT_FALSE(IsAtMost(std::to_string(device_api_level_).c_str()));
   }
 
-  EXPECT_TRUE(IsAtMost(std::to_string(device_api_level_ + 1)));
-  EXPECT_TRUE(IsAtMost(std::to_string(__ANDROID_API_FUTURE__)));
+  EXPECT_TRUE(IsAtMost(std::to_string(device_api_level_ + 1).c_str()));
+  EXPECT_TRUE(IsAtMost(std::to_string(__ANDROID_API_FUTURE__).c_str()));
 }
 
 TEST_F(UnboundedSdkLevelTest, CodenameVersionsTest) {
@@ -75,6 +82,13 @@ TEST_F(UnboundedSdkLevelTest, CodenameVersionsTest) {
   EXPECT_TRUE(IsAtMost("Tiramisu"));
 
   EXPECT_TRUE(IsAtMost("Zzz"));
+}
+
+TEST_F(UnboundedSdkLevelTest, NoStlTest) {
+  EXPECT_TRUE(android::modules::sdklevel::nostl::IsAtLeast(
+      std::to_string(device_api_level_).c_str()));
+  EXPECT_TRUE(android::modules::sdklevel::nostl::IsAtMost(
+      std::to_string(device_api_level_ + 1).c_str()));
 }
 
 TEST_F(UnboundedSdkLevelDeathTest, IsAtLeast_EmptyVersionDeathTest) {
