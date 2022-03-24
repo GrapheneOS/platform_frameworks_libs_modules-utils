@@ -16,39 +16,49 @@
 
 #pragma once
 
-#include <android-base/logging.h>
-#include <android-base/properties.h>
+#include <assert.h>
+#include <ctype.h>
+#include <limits.h>
+#include <stdlib.h>
+
 #include <android/api-level.h>
+#include <log/log.h>
+
+#include "sdk_level.h"
 
 namespace android {
 namespace modules {
 namespace sdklevel {
 namespace unbounded {
 
-static inline auto getVersionInt(const std::string &version) {
-  std::size_t processed_chars = 0;
-  const int versionInt = std::stoi(version, &processed_chars);
-  CHECK(processed_chars == version.size());
-  return versionInt;
+static inline auto getVersionInt(const char *version) {
+  LOG_ALWAYS_FATAL_IF(version[0] == '\0', "empty version");
+  char *next_char = 0;
+  const long versionInt = strtol(version, &next_char, 10);
+  LOG_ALWAYS_FATAL_IF(*next_char != '\0', "no conversion from \"%s\" to long",
+                      version);
+  LOG_ALWAYS_FATAL_IF(versionInt <= 0, "negative version: %s", version);
+  LOG_ALWAYS_FATAL_IF(versionInt > INT_MAX, "version too large: %s", version);
+  return (int)versionInt;
 }
 
-static inline bool isCodename(const std::string &version) {
-  CHECK(version.size() > 0);
-  return std::isupper(version.at(0));
+static inline bool isCodename(const char *version) {
+  LOG_ALWAYS_FATAL_IF(version[0] == '\0', "empty version");
+  return isupper(version[0]);
 }
 
 // Checks if the device is running a specific version or newer.
 // Always use specific methods IsAtLeast*() available in sdk_level.h when the
 // version is known at build time. This should only be used when a dynamic
 // runtime check is needed.
-static inline bool IsAtLeast(const std::string &version) {
-  const std::string &device_codename =
-      android::base::GetProperty("ro.build.version.codename", "");
-  if ("REL" == device_codename) {
+static inline bool IsAtLeast(const char *version) {
+  char device_codename[PROP_VALUE_MAX];
+  GetCodename(device_codename);
+  if (!strcmp("REL", device_codename)) {
     return android_get_device_api_level() >= getVersionInt(version);
   }
   if (isCodename(version)) {
-    return device_codename.compare(version) >= 0;
+    return strcmp(device_codename, version) >= 0;
   }
   return android_get_device_api_level() >= getVersionInt(version);
 }
@@ -57,14 +67,14 @@ static inline bool IsAtLeast(const std::string &version) {
 // Always use specific methods IsAtLeast*() available in sdk_level.h when the
 // version is known at build time. This should only be used when a dynamic
 // runtime check is needed.
-static inline bool IsAtMost(const std::string &version) {
-  const std::string &device_codename =
-      android::base::GetProperty("ro.build.version.codename", "");
-  if ("REL" == device_codename) {
+static inline bool IsAtMost(const char *version) {
+  char device_codename[PROP_VALUE_MAX];
+  GetCodename(device_codename);
+  if (!strcmp("REL", device_codename)) {
     return android_get_device_api_level() <= getVersionInt(version);
   }
   if (isCodename(version)) {
-    return device_codename.compare(version) <= 0;
+    return strcmp(device_codename, version) <= 0;
   }
   return android_get_device_api_level() < getVersionInt(version);
 }
