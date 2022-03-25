@@ -16,32 +16,46 @@
 
 #pragma once
 
-#include <android-base/properties.h>
+#include <string.h>
+
 #include <android/api-level.h>
+#include <sys/system_properties.h>
+
+namespace {
+
+template <size_t size> static void GetCodename(char (&codename)[size]) {
+  // ro. properties can be longer than PROP_VALUE_MAX, but *this* property
+  // is not likely to be very long.
+  static_assert(size == PROP_VALUE_MAX,
+                "GetCodename needs a buffer of size PROP_VALUE_MAX");
+  __system_property_get("ro.build.version.codename", codename);
+}
+
+// Checks if the codename is a matching or higher version than the device's
+// codename.
+static bool IsAtLeastPreReleaseCodename(const char *codename) {
+  char deviceCodename[PROP_VALUE_MAX];
+  GetCodename(deviceCodename);
+  return strcmp(deviceCodename, "REL") != 0 &&
+         strcmp(deviceCodename, codename) >= 0;
+}
+
+} // namespace
 
 namespace android {
 namespace modules {
 namespace sdklevel {
 
-// Checks if the codename is a matching or higher version than the device's
-// codename.
-static bool IsAtLeastPreReleaseCodename(const std::string &codename) {
-  const std::string &deviceCodename =
-      android::base::GetProperty("ro.build.version.codename", "");
-  return "REL" != deviceCodename && deviceCodename.compare(codename) >= 0;
-}
-
 // Checks if the device is running on release version of Android R or newer.
 static inline bool IsAtLeastR() { return android_get_device_api_level() >= 30; }
 
-// Checks if the device is running on a pre-release version of Android S or a
-// release version of Android S or newer.
+// Checks if the device is running on release version of Android S or newer.
 static inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
 
 // Checks if the device is running on a pre-release version of Android T or a
 // release version of Android T or newer.
 static inline bool IsAtLeastT() { return IsAtLeastPreReleaseCodename("T"); }
 
-} // namespace utils
+} // namespace sdklevel
 } // namespace modules
 } // namespace android

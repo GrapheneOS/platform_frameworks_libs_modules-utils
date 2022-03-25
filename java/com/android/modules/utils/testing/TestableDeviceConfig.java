@@ -91,37 +91,35 @@ public final class TestableDeviceConfig implements StaticMockFixture {
                 any(DeviceConfig.OnPropertiesChangedListener.class)));
 
         doAnswer((Answer<Boolean>) invocationOnMock -> {
-                    String namespace = invocationOnMock.getArgument(0);
-                    String name = invocationOnMock.getArgument(1);
-                    String value = invocationOnMock.getArgument(2);
-                    mKeyValueMap.put(getKey(namespace, name), value);
-                    invokeListeners(namespace, getProperties(namespace, name, value));
-                    return true;
-                }
-        ).when(() -> DeviceConfig.setProperty(anyString(), anyString(), anyString(), anyBoolean()));
+            String namespace = invocationOnMock.getArgument(0);
+            String name = invocationOnMock.getArgument(1);
+            String value = invocationOnMock.getArgument(2);
+            mKeyValueMap.put(getKey(namespace, name), value);
+            invokeListeners(namespace, getProperties(namespace, name, value));
+            return true;
+        }).when(() -> DeviceConfig.setProperty(
+                anyString(), anyString(), anyString(), anyBoolean()));
 
         doAnswer((Answer<Boolean>) invocationOnMock -> {
-                    String namespace = invocationOnMock.getArgument(0);
-                    String name = invocationOnMock.getArgument(1);
-                    mKeyValueMap.remove(getKey(namespace, name));
-                    invokeListeners(namespace, getProperties(namespace, name, null));
-                    return true;
-                }
-        ).when(() -> DeviceConfig.deleteProperty(anyString(), anyString()));
+            String namespace = invocationOnMock.getArgument(0);
+            String name = invocationOnMock.getArgument(1);
+            mKeyValueMap.remove(getKey(namespace, name));
+            invokeListeners(namespace, getProperties(namespace, name, null));
+            return true;
+        }).when(() -> DeviceConfig.deleteProperty(anyString(), anyString()));
 
         doAnswer((Answer<Boolean>) invocationOnMock -> {
-                    Properties properties = invocationOnMock.getArgument(0);
-                    String namespace = properties.getNamespace();
-                    Map<String, String> keyValues = new ArrayMap<>();
-                    for (String name : properties.getKeyset()) {
-                        String value = properties.getString(name, /* defaultValue= */ "");
-                        mKeyValueMap.put(getKey(namespace, name), value);
-                        keyValues.put(name.toLowerCase(), value);
-                    }
-                    invokeListeners(namespace, getProperties(namespace, keyValues));
-                    return true;
-                }
-        ).when(() -> DeviceConfig.setProperties(any(Properties.class)));
+            Properties properties = invocationOnMock.getArgument(0);
+            String namespace = properties.getNamespace();
+            Map<String, String> keyValues = new ArrayMap<>();
+            for (String name : properties.getKeyset()) {
+                String value = properties.getString(name, /* defaultValue= */ "");
+                mKeyValueMap.put(getKey(namespace, name), value);
+                keyValues.put(name.toLowerCase(), value);
+            }
+            invokeListeners(namespace, getProperties(namespace, keyValues));
+            return true;
+        }).when(() -> DeviceConfig.setProperties(any(Properties.class)));
 
         doAnswer((Answer<String>) invocationOnMock -> {
             String namespace = invocationOnMock.getArgument(0);
