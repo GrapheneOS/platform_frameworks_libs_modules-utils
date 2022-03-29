@@ -17,12 +17,12 @@
 package com.android.modules.utils.build;
 
 import android.os.Build;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.Collections;
 import java.util.Set;
 
 /**
@@ -47,13 +47,22 @@ public final class UnboundedSdkLevel {
         return sInstance.isAtMostInternal(version);
     }
 
+    private static final SparseArray<Set<String>> PREVIOUS_CODENAMES = new SparseArray<>(4);
+
+    static {
+        PREVIOUS_CODENAMES.put(29, Set.of("Q"));
+        PREVIOUS_CODENAMES.put(30, Set.of("Q", "R"));
+        PREVIOUS_CODENAMES.put(31, Set.of("Q", "R", "S"));
+        PREVIOUS_CODENAMES.put(32, Set.of("Q", "R", "S", "Sv2"));
+    }
+
     private static final UnboundedSdkLevel sInstance =
             new UnboundedSdkLevel(
                     Build.VERSION.SDK_INT,
                     Build.VERSION.CODENAME,
                     SdkLevel.isAtLeastT()
                             ? Build.VERSION.KNOWN_CODENAMES
-                            : Collections.emptySet());
+                            : PREVIOUS_CODENAMES.get(Build.VERSION.SDK_INT));
 
     private final int mSdkInt;
     private final String mCodename;
