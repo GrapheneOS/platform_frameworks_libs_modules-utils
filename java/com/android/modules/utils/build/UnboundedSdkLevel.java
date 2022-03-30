@@ -79,6 +79,7 @@ public final class UnboundedSdkLevel {
 
     @VisibleForTesting
     boolean isAtLeastInternal(@NonNull String version) {
+        version = removeFingerprint(version);
         if (mIsReleaseBuild) {
             if (isCodename(version)) {
                 // On release builds only accept future codenames
@@ -101,6 +102,7 @@ public final class UnboundedSdkLevel {
 
     @VisibleForTesting
     boolean isAtMostInternal(@NonNull String version) {
+        version = removeFingerprint(version);
         if (mIsReleaseBuild) {
             if (isCodename(version)) {
                 // On release builds only accept future codenames
@@ -125,6 +127,21 @@ public final class UnboundedSdkLevel {
         // to a previously finalized API level, meaning that the current build is not at most "31".
         // This is why the comparison is strict, instead of <=.
         return mSdkInt < Integer.parseInt(version);
+    }
+
+    /**
+     * Checks if a string is a codename and contains a fingerprint. Returns the codename without the
+     * fingerprint if that is the case. Returns the original string otherwise.
+     */
+    @VisibleForTesting
+    String removeFingerprint(@NonNull String version) {
+        if (isCodename(version)) {
+            int index = version.indexOf('.');
+            if (index != -1) {
+                return version.substring(0, index);
+            }
+        }
+        return version;
     }
 
     private boolean isCodename(String version) {
