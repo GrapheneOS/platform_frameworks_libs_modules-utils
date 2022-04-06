@@ -200,4 +200,18 @@ public class UnboundedSdkLevelTest {
         assertThrows(IllegalArgumentException.class, () -> sdkLevelQ.isAtMostInternal("current"));
     }
 
+    @Test
+    public void testCodenamesWithFingerprint() {
+        UnboundedSdkLevel sdkLevel = new UnboundedSdkLevel(30, "R",
+            PREVIOUS_CODENAMES.get(30));
+
+        assertThat(sdkLevel.isAtMostInternal("Q")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("Tiramisu")).isTrue();
+        assertThat(sdkLevel.isAtLeastInternal("Q")).isTrue();
+        assertThat(sdkLevel.isAtLeastInternal("Tiramisu")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("Q.fingerprint")).isFalse();
+        assertThat(sdkLevel.isAtMostInternal("Tiramisu.fingerprint")).isTrue();
+        assertThat(sdkLevel.isAtLeastInternal("Q.fingerprint")).isTrue();
+        assertThat(sdkLevel.isAtLeastInternal("Tiramisu.fingerprint")).isFalse();
+    }
 }
