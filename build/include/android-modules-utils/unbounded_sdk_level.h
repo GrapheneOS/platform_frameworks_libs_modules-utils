@@ -20,9 +20,11 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <android/api-level.h>
 #include <log/log.h>
+#include <sys/system_properties.h>
 
 #include "sdk_level.h"
 
@@ -31,7 +33,7 @@ namespace modules {
 namespace sdklevel {
 namespace unbounded {
 
-static inline auto getVersionInt(const char *version) {
+inline auto getVersionInt(const char *version) {
   LOG_ALWAYS_FATAL_IF(version[0] == '\0', "empty version");
   char *next_char = 0;
   const long versionInt = strtol(version, &next_char, 10);
@@ -42,7 +44,7 @@ static inline auto getVersionInt(const char *version) {
   return (int)versionInt;
 }
 
-static inline bool isCodename(const char *version) {
+inline bool isCodename(const char *version) {
   LOG_ALWAYS_FATAL_IF(version[0] == '\0', "empty version");
   return isupper(version[0]);
 }
@@ -51,9 +53,9 @@ static inline bool isCodename(const char *version) {
 // Always use specific methods IsAtLeast*() available in sdk_level.h when the
 // version is known at build time. This should only be used when a dynamic
 // runtime check is needed.
-static inline bool IsAtLeast(const char *version) {
+inline bool IsAtLeast(const char *version) {
   char device_codename[PROP_VALUE_MAX];
-  GetCodename(device_codename);
+  detail::GetCodename(device_codename);
   if (!strcmp("REL", device_codename)) {
     return android_get_device_api_level() >= getVersionInt(version);
   }
@@ -67,9 +69,9 @@ static inline bool IsAtLeast(const char *version) {
 // Always use specific methods IsAtLeast*() available in sdk_level.h when the
 // version is known at build time. This should only be used when a dynamic
 // runtime check is needed.
-static inline bool IsAtMost(const char *version) {
+inline bool IsAtMost(const char *version) {
   char device_codename[PROP_VALUE_MAX];
-  GetCodename(device_codename);
+  detail::GetCodename(device_codename);
   if (!strcmp("REL", device_codename)) {
     return android_get_device_api_level() <= getVersionInt(version);
   }
