@@ -49,7 +49,7 @@ public final class DeviceSdkLevel {
      * Android T or newer.
      */
     public boolean isDeviceAtLeastT() throws DeviceNotAvailableException {
-        return isDeviceAtLeastPreReleaseCodename("T");
+        return device.getApiLevel() >= 33;
     }
 
     private boolean isDeviceAtLeastPreReleaseCodename(@NonNull String codename)
