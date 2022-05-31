@@ -53,6 +53,7 @@ java_library {
 java_defaults {
     name: "modules-utils-testable-device-config-defaults",
     static_libs: ["modules-utils-testable-device-config"],
+    compile_multilib: "both",
     jni_libs: [
         "libdexmakerjvmtiagent",
         "libstaticjvmtiagent",
