@@ -21,10 +21,12 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
-import android.os.test.TestLooper;
+import android.os.TestLooperManager;
 import android.test.suitebuilder.annotation.MediumTest;
 import android.test.suitebuilder.annotation.SmallTest;
 import android.util.Log;
+
+import androidx.test.InstrumentationRegistry;
 
 import com.android.internal.util.StateMachine.LogRec;
 
@@ -411,15 +413,22 @@ public class StateMachineTest extends TestCase {
     public void testStateMachineQuitNowAfterStart() throws Exception {
         if (WAIT_FOR_DEBUGGER) Debug.waitForDebugger();
 
-        TestLooper testLooper = new TestLooper();
-        StateMachineQuitNowAfterStartTest smQuitNowAfterStartTest =
-                new StateMachineQuitNowAfterStartTest(
-                        "smQuitNowAfterStartTest", testLooper.getLooper());
-        smQuitNowAfterStartTest.start();
-        smQuitNowAfterStartTest.quitNow();
-        if (smQuitNowAfterStartTest.isDbg()) tlog("testStateMachineQuitNowAfterStart E");
+        HandlerThread mThread = new HandlerThread("testStateMachineQuitNowAfterStart");
+        mThread.start();
 
-        testLooper.dispatchAll();
+        Looper mLooper = mThread.getLooper();
+        TestLooperManager looperManager = InstrumentationRegistry.getInstrumentation()
+                .acquireLooperManager(mLooper);
+        StateMachineQuitNowAfterStartTest smQuitNowAfterStartTest =
+                new StateMachineQuitNowAfterStartTest("smQuitNowAfterStartTest", mLooper);
+        synchronized(smQuitNowAfterStartTest) {
+            smQuitNowAfterStartTest.start();
+            smQuitNowAfterStartTest.quitNow();
+            if (smQuitNowAfterStartTest.isDbg()) tlog("testStateMachineQuitNowAfterStart E");
+
+            looperManager.release();
+            smQuitNowAfterStartTest.wait();
+        }
         dumpLogRecs(smQuitNowAfterStartTest.mLogRecs);
         assertEquals(2, smQuitNowAfterStartTest.mLogRecs.size());
 
