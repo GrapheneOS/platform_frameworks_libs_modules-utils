@@ -35,7 +35,7 @@ public class SynchronousResultReceiverTest extends TestCase {
 
     @Test
     public void testSimpleData() throws Exception {
-        final SynchronousResultReceiver<Boolean> recv = new SynchronousResultReceiver();
+        final SynchronousResultReceiver<Boolean> recv = SynchronousResultReceiver.get();
         recv.send(true);
         final boolean result = recv.awaitResultNoInterrupt(OK_TIME).getValue(false);
         assertTrue(result);
@@ -43,7 +43,7 @@ public class SynchronousResultReceiverTest extends TestCase {
 
     @Test
     public void testDoubleComplete() throws Exception {
-        final SynchronousResultReceiver<Boolean> recv = new SynchronousResultReceiver();
+        final SynchronousResultReceiver<Boolean> recv = SynchronousResultReceiver.get();
         recv.send(true);
         Assert.assertThrows(IllegalStateException.class,
                 () -> recv.send(true));
@@ -51,14 +51,14 @@ public class SynchronousResultReceiverTest extends TestCase {
 
     @Test
     public void testDefaultValue() throws Exception {
-        final SynchronousResultReceiver<Boolean> recv = new SynchronousResultReceiver();
+        final SynchronousResultReceiver<Boolean> recv = SynchronousResultReceiver.get();
         recv.send(null);
         assertTrue(recv.awaitResultNoInterrupt(OK_TIME).getValue(true));
     }
 
     @Test
     public void testPropagateException() throws Exception {
-        final SynchronousResultReceiver<Boolean> recv = new SynchronousResultReceiver();
+        final SynchronousResultReceiver<Boolean> recv = SynchronousResultReceiver.get();
         recv.propagateException(new RuntimeException("Placeholder exception"));
         Assert.assertThrows(RuntimeException.class,
                 () -> recv.awaitResultNoInterrupt(OK_TIME).getValue(false));
@@ -66,14 +66,14 @@ public class SynchronousResultReceiverTest extends TestCase {
 
     @Test
     public void testTimeout() throws Exception {
-        final SynchronousResultReceiver<Boolean> recv = new SynchronousResultReceiver();
+        final SynchronousResultReceiver<Boolean> recv = SynchronousResultReceiver.get();
         Assert.assertThrows(TimeoutException.class,
                 () -> recv.awaitResultNoInterrupt(OK_TIME));
     }
 
     @Test
     public void testNegativeTime() throws Exception {
-        final SynchronousResultReceiver<Boolean> recv = new SynchronousResultReceiver();
+        final SynchronousResultReceiver<Boolean> recv = SynchronousResultReceiver.get();
         recv.send(false);
         Assert.assertThrows(TimeoutException.class,
                 () -> recv.awaitResultNoInterrupt(NEG_TIME));
