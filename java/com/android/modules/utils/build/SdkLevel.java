@@ -60,6 +60,15 @@ public final class SdkLevel {
         return isAtLeastPreReleaseCodename("T");
     }
 
+    /**
+     * Checks if the device is running on a pre-release or release version of Android
+     * UpsideDownCake or newer
+     */
+    @ChecksSdkIntAtLeast(codename = "UpsideDownCake")
+    public static boolean isAtLeastU() {
+        return SDK_INT >= 33 && isAtLeastPreReleaseCodename("UpsideDownCake");
+    }
+
     private static boolean isAtLeastPreReleaseCodename(@NonNull String codename) {
         // Special case "REL", which means the build is not a pre-release build.
         if ("REL".equals(CODENAME)) {
