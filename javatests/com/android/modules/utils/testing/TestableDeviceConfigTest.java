@@ -20,6 +20,8 @@ import static android.provider.DeviceConfig.OnPropertiesChangedListener;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
 import android.platform.test.annotations.Presubmit;
 import android.provider.DeviceConfig;
 import android.provider.DeviceConfig.BadConfigException;
@@ -29,6 +31,9 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.modules.utils.build.SdkLevel;
+
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,6 +54,11 @@ public class TestableDeviceConfigTest {
     @Rule
     public TestableDeviceConfig.TestableDeviceConfigRule
             mTestableDeviceConfig = new TestableDeviceConfig.TestableDeviceConfigRule();
+
+    @Before
+    public void setup() {
+        assumeTrue(SdkLevel.isAtLeastT());
+    }
 
     @Test
     public void getProperty_empty() {
