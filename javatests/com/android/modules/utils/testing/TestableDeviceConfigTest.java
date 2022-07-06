@@ -33,7 +33,6 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,11 +53,6 @@ public class TestableDeviceConfigTest {
     @Rule
     public TestableDeviceConfig.TestableDeviceConfigRule
             mTestableDeviceConfig = new TestableDeviceConfig.TestableDeviceConfigRule();
-
-    @Before
-    public void setup() {
-        assumeTrue(SdkLevel.isAtLeastT());
-    }
 
     @Test
     public void getProperty_empty() {
@@ -104,6 +98,8 @@ public class TestableDeviceConfigTest {
 
     @Test
     public void setProperties() throws BadConfigException {
+        // api only present on T
+        assumeTrue(SdkLevel.isAtLeastT());
         String newKey = "key2";
         String newValue = "value2";
         DeviceConfig.setProperties(new Properties.Builder(sNamespace).setString(sKey,
@@ -114,6 +110,9 @@ public class TestableDeviceConfigTest {
 
     @Test
     public void deleteProperty() {
+        // api only present on T
+        assumeTrue(SdkLevel.isAtLeastT());
+
         DeviceConfig.setProperty(sNamespace, sKey, sValue, false);
         assertThat(DeviceConfig.getProperty(sNamespace, sKey)).isEqualTo(sValue);
         DeviceConfig.deleteProperty(sNamespace, sKey);
@@ -189,6 +188,8 @@ public class TestableDeviceConfigTest {
 
     @Test
     public void testListener_setProperties() throws BadConfigException, InterruptedException {
+        // api only present on T
+        assumeTrue(SdkLevel.isAtLeastT());
         CountDownLatch countDownLatch = new CountDownLatch(1);
         String newKey = "key2";
         String newValue = "value2";
@@ -215,6 +216,8 @@ public class TestableDeviceConfigTest {
 
     @Test
     public void testListener_deleteProperty() throws InterruptedException {
+        // api only present on T
+        assumeTrue(SdkLevel.isAtLeastT());
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         OnPropertiesChangedListener changeListener = (properties) -> {
