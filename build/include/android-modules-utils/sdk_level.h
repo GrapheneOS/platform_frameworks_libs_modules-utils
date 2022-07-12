@@ -33,6 +33,15 @@ inline void GetCodename(char (&codename)[PROP_VALUE_MAX]) {
   __system_property_get("ro.build.version.codename", codename);
 }
 
+// Checks if the codename is a matching or higher version than the device's
+// codename.
+static bool IsAtLeastPreReleaseCodename(const char *codename) {
+  char deviceCodename[PROP_VALUE_MAX];
+  GetCodename(deviceCodename);
+  return strcmp(deviceCodename, "REL") != 0 &&
+         strcmp(deviceCodename, codename) >= 0;
+}
+
 } // namespace detail
 
 // Checks if the device is running on release version of Android R or newer.
@@ -43,6 +52,12 @@ inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
 
 // Checks if the device is running on release version of Android T or newer.
 inline bool IsAtLeastT() { return android_get_device_api_level() >= 33; }
+
+// Checks if the device is running on release version of Android U or newer.
+inline bool IsAtLeastU() {
+  return android_get_device_api_level() >= 33 &&
+         detail::IsAtLeastPreReleaseCodename("U");
+}
 
 } // namespace sdklevel
 } // namespace modules
