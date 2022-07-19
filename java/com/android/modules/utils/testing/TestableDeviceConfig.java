@@ -130,27 +130,29 @@ public final class TestableDeviceConfig implements StaticMockFixture {
             String name = invocationOnMock.getArgument(1);
             return mKeyValueMap.get(getKey(namespace, name));
         }).when(() -> DeviceConfig.getProperty(anyString(), anyString()));
-
-        doAnswer((Answer<Properties>) invocationOnMock -> {
-            String namespace = invocationOnMock.getArgument(0);
-            final int varargStartIdx = 1;
-            Map<String, String> keyValues = new ArrayMap<>();
-            if (invocationOnMock.getArguments().length == varargStartIdx) {
-                mKeyValueMap.entrySet().forEach(entry -> {
-                    Pair<String, String> nameSpaceAndName = getNameSpaceAndName(entry.getKey());
-                    if (!nameSpaceAndName.first.equals(namespace)) {
-                        return;
+        if (SdkLevel.isAtLeastR()) {
+            doAnswer((Answer<Properties>) invocationOnMock -> {
+                String namespace = invocationOnMock.getArgument(0);
+                final int varargStartIdx = 1;
+                Map<String, String> keyValues = new ArrayMap<>();
+                if (invocationOnMock.getArguments().length == varargStartIdx) {
+                    mKeyValueMap.entrySet().forEach(entry -> {
+                        Pair<String, String> nameSpaceAndName = getNameSpaceAndName(entry.getKey());
+                        if (!nameSpaceAndName.first.equals(namespace)) {
+                            return;
+                        }
+                        keyValues.put(nameSpaceAndName.second.toLowerCase(), entry.getValue());
+                    });
+                } else {
+                    for (int i = varargStartIdx; i < invocationOnMock.getArguments().length; ++i) {
+                        String name = invocationOnMock.getArgument(i);
+                        keyValues.put(name.toLowerCase(),
+                            mKeyValueMap.get(getKey(namespace, name)));
                     }
-                    keyValues.put(nameSpaceAndName.second.toLowerCase(), entry.getValue());
-                });
-            } else {
-                for (int i = varargStartIdx; i < invocationOnMock.getArguments().length; ++i) {
-                    String name = invocationOnMock.getArgument(i);
-                    keyValues.put(name.toLowerCase(), mKeyValueMap.get(getKey(namespace, name)));
                 }
-            }
-            return getProperties(namespace, keyValues);
-        }).when(() -> DeviceConfig.getProperties(anyString(), ArgumentMatchers.<String>any()));
+                return getProperties(namespace, keyValues);
+            }).when(() -> DeviceConfig.getProperties(anyString(), ArgumentMatchers.<String>any()));
+        }
     }
 
     /**
