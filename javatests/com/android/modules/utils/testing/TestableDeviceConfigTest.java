@@ -127,6 +127,8 @@ public class TestableDeviceConfigTest {
 
     @Test
     public void getProperties_empty() {
+        // api only present on R+
+        assumeTrue(SdkLevel.isAtLeastR());
         String newKey = "key2";
         String newValue = "value2";
         DeviceConfig.setProperty(sNamespace, sKey, sValue, false);
@@ -143,6 +145,8 @@ public class TestableDeviceConfigTest {
 
     @Test
     public void getProperties() {
+        // api only present on R+
+        assumeTrue(SdkLevel.isAtLeastR());
         Properties properties = DeviceConfig.getProperties(sNamespace, sKey);
         assertThat(properties.getString(sKey, null)).isNull();
 
