@@ -63,7 +63,7 @@ public final class SdkLevel {
      */
     @ChecksSdkIntAtLeast(codename = "UpsideDownCake")
     public static boolean isAtLeastU() {
-        return SDK_INT >= 33 && isAtLeastPreReleaseCodename("UpsideDownCake");
+        return isAtLeastPreReleaseCodename("UpsideDownCake");
     }
 
     private static boolean isAtLeastPreReleaseCodename(@NonNull String codename) {
