@@ -25,28 +25,29 @@ import java.lang.annotation.Target;
 /**
  * Denotes that the annotated element enforces one or more permissions.
  * <p/>
- * Example of requiring a single permission:
+ * Example of enforcing a single permission:
  * <pre>{@code
  *   {@literal @}EnforcePermission(Manifest.permission.SET_WALLPAPER)
  *   public abstract void setWallpaper(Bitmap bitmap) throws IOException;
  *
- *   {@literal @}RequiresPermission(ACCESS_COARSE_LOCATION)
+ *   {@literal @}EnforcePermission(ACCESS_COARSE_LOCATION)
  *   public abstract Location getLastKnownLocation(String provider);
  * }</pre>
- * Example of requiring at least one permission from a set:
+ * Example of enforcing at least one permission from a set:
  * <pre>{@code
  *   {@literal @}EnforcePermission(anyOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
  *   public abstract Location getLastKnownLocation(String provider);
  * }</pre>
- * Example of requiring multiple permissions:
+ * Example of enforcing multiple permissions:
  * <pre>{@code
  *   {@literal @}EnforcePermission(allOf = {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION})
  *   public abstract Location getLastKnownLocation(String provider);
  * }</pre>
  * <p>
- * This annotation is automatically added to generated code (e.g., aidl
- * interface). It is rarely required to manually add it, unless prompted by a
- * linter.
+ * This annotation is automatically added to generated code (for example, when
+ * compiling an AIDL interface). It is an informational indicator that the
+ * underlying implementation is verifying the permissions when called.
+ * It is rarely required to manually add it, unless prompted by a linter.
  * </p>
  *
  * @see RequiresPermission
