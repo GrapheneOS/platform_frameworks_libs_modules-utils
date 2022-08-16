@@ -52,6 +52,14 @@ public final class DeviceSdkLevel {
         return device.getApiLevel() >= 33;
     }
 
+    /**
+     * Checks if the device is running on a pre-release or release version of Android
+     * UpsideDownCake or newer
+     */
+    public boolean isDeviceAtLeastU() throws DeviceNotAvailableException {
+        return isDeviceAtLeastPreReleaseCodename("UpsideDownCake");
+    }
+
     private boolean isDeviceAtLeastPreReleaseCodename(@NonNull String codename)
             throws DeviceNotAvailableException {
         String deviceCodename = device.getProperty(DeviceProperties.BUILD_CODENAME);
