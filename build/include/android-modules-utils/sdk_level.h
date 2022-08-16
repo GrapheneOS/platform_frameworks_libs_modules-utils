@@ -21,13 +21,15 @@
 #include <android/api-level.h>
 #include <sys/system_properties.h>
 
-namespace {
+namespace android {
+namespace modules {
+namespace sdklevel {
 
-template <size_t size> static void GetCodename(char (&codename)[size]) {
+namespace detail {
+
+inline void GetCodename(char (&codename)[PROP_VALUE_MAX]) {
   // ro. properties can be longer than PROP_VALUE_MAX, but *this* property
   // is not likely to be very long.
-  static_assert(size == PROP_VALUE_MAX,
-                "GetCodename needs a buffer of size PROP_VALUE_MAX");
   __system_property_get("ro.build.version.codename", codename);
 }
 
@@ -40,25 +42,22 @@ static bool IsAtLeastPreReleaseCodename(const char *codename) {
          strcmp(deviceCodename, codename) >= 0;
 }
 
-} // namespace
-
-namespace android {
-namespace modules {
-namespace sdklevel {
+} // namespace detail
 
 // Checks if the device is running on release version of Android R or newer.
-static inline bool IsAtLeastR() { return android_get_device_api_level() >= 30; }
+inline bool IsAtLeastR() { return android_get_device_api_level() >= 30; }
 
 // Checks if the device is running on release version of Android S or newer.
-static inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
+inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
 
-// Checks if the device is running on a pre-release version of Android T or a
-// release version of Android T or newer.
-static inline bool IsAtLeastT() { return IsAtLeastPreReleaseCodename("T"); }
+// Checks if the device is running on release version of Android T or newer.
+inline bool IsAtLeastT() { return android_get_device_api_level() >= 33; }
 
-// Checks if the device is running on a pre-release version of Android U or a
-// release version of Android U or newer.
-static inline bool IsAtLeastU() { return IsAtLeastPreReleaseCodename("U"); }
+// Checks if the device is running on release version of Android U or newer.
+inline bool IsAtLeastU() {
+  return android_get_device_api_level() >= 33 &&
+         detail::IsAtLeastPreReleaseCodename("U");
+}
 
 } // namespace sdklevel
 } // namespace modules
