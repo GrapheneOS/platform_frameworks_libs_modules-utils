@@ -18,6 +18,8 @@ package com.android.modules.utils;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
+import android.app.compat.gms.GmsModuleHooks;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -115,6 +117,13 @@ public final class SynchronousResultReceiver<T> implements Parcelable {
          */
         public T getValue(T defaultValue) {
             if (mException != null) {
+
+                if (GmsCompat.isEnabled()) {
+                    if (GmsModuleHooks.interceptSynchronousResultReceiverException(mException)) {
+                        return defaultValue;
+                    }
+                }
+
                 throw mException;
             }
             if (mObject == null) {
