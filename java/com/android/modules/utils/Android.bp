@@ -69,6 +69,20 @@ java_library {
 }
 
 java_library {
+    name: "modules-utils-binary-xml",
+    defaults: ["modules-utils-defaults"],
+    srcs: [
+        "BinaryXmlPullParser.java",
+        "BinaryXmlSerializer.java",
+        "FastDataInput.java",
+        "FastDataOutput.java",
+        "ModifiedUtf8.java",
+        "TypedXmlPullParser.java",
+        "TypedXmlSerializer.java",
+    ],
+}
+
+java_library {
     name: "modules-utils-bytesmatcher",
     defaults: ["modules-utils-defaults"],
     srcs: ["BytesMatcher.java"],
