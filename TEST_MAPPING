@@ -13,6 +13,29 @@
     },
     {
       "name": "ComposHostTestCases"
+    },
+    {
+      // b/255344517: The binary XML tests currently lives in frameworks/base.
+      "name": "FrameworksCoreTests",
+      "options": [
+        {
+          "include-filter": "com.android.internal.util.FastDataTest"
+        }
+      ],
+      "file_patterns": ["FastData"]
+    },
+    {
+      // b/255344517: The binary XML tests currently lives in frameworks/base.
+      "name": "FrameworksCoreTests",
+      "options": [
+        {
+          "include-filter": "android.util.XmlTest"
+        },
+        {
+          "include-filter": "android.util.BinaryXmlTest"
+        }
+      ],
+      "file_patterns": ["Xml"]
     }
     // TODO: Re-enable when this is stable.
     // {
