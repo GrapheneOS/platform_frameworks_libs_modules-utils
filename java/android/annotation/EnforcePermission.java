@@ -55,7 +55,7 @@ import java.lang.annotation.Target;
  * @hide
  */
 @Retention(CLASS)
-@Target({METHOD,TYPE})
+@Target({METHOD})
 public @interface EnforcePermission {
     /**
      * The name of the permission that is required, if precisely one permission
