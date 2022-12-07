@@ -43,6 +43,7 @@ android_test {
     libs: [
         "android.test.base",
         "android.test.runner",
+        "framework-configinfrastructure",
     ],
 
     test_suites: ["general-tests"],

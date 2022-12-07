@@ -40,6 +40,7 @@ android_test {
     libs: [
         "android.test.mock",
         "android.test.runner",
+        "framework-configinfrastructure",
     ],
 
     test_suites: [
