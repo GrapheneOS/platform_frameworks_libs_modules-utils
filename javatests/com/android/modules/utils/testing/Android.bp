@@ -33,6 +33,7 @@ android_test {
         "androidx.test.core",
         "androidx.test.runner",
         "androidx.test.rules",
+        "modules-utils-build",
         "platform-test-annotations",
         "truth-prebuilt",
     ],
