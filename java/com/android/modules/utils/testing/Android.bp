@@ -41,6 +41,9 @@ java_library {
         "mockito-target-extended-minus-junit4",
         "modules-utils-build",
     ],
+    libs: [
+        "framework-configinfrastructure",
+    ],
     sdk_version: "module_current",
     min_sdk_version: "29",
     visibility: ["//visibility:public"],
