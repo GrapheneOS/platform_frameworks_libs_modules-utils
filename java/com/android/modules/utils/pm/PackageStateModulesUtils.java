@@ -17,7 +17,10 @@
 package com.android.modules.utils.pm;
 
 import android.annotation.NonNull;
+import android.os.Build;
 import android.text.TextUtils;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.server.pm.pkg.AndroidPackageSplit;
 import com.android.server.pm.pkg.PackageState;
@@ -25,11 +28,13 @@ import com.android.server.pm.pkg.PackageState;
 import java.util.List;
 
 public class PackageStateModulesUtils {
+    private PackageStateModulesUtils() {}
 
     /**
-     * @return True if the package is optimizable by dexopt.
+     * @return True if the package is dexoptable.
      */
-    public boolean isOptimizable(@NonNull PackageState packageState) {
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public static boolean isDexoptable(@NonNull PackageState packageState) {
         if (packageState.isApex() || "android".equals(packageState.getPackageName())
                 || packageState.getAppId() <= 0) {
             return false;
@@ -59,8 +64,9 @@ public class PackageStateModulesUtils {
      * @param codeOnly Whether to filter to only code usages, ignoring resource only usages.
      * @return True if the package is loadable.
      */
-    public boolean isLoadableInOtherProcesses(@NonNull PackageState packageState,
-            boolean codeOnly) {
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public static boolean isLoadableInOtherProcesses(
+            @NonNull PackageState packageState, boolean codeOnly) {
         var pkg = packageState.getAndroidPackage();
         if (pkg == null) {
             return false;

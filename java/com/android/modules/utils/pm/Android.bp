@@ -22,6 +22,8 @@ java_library {
     srcs: ["PackageStateModulesUtils.java"],
     defaults: ["modules-utils-defaults"],
     sdk_version: "system_server_current",
-    min_sdk_version: "UpsideDownCake",
-    libs: ["framework-annotations-lib"],
+    min_sdk_version: "31",
+    libs: [
+        "androidx.annotation_annotation",
+    ],
 }
