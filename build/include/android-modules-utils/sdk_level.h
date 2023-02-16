@@ -35,7 +35,7 @@ inline void GetCodename(char (&codename)[PROP_VALUE_MAX]) {
 
 // Checks if the codename is a matching or higher version than the device's
 // codename.
-static bool IsAtLeastPreReleaseCodename(const char *codename) {
+[[maybe_unused]] static bool IsAtLeastPreReleaseCodename(const char *codename) {
   char deviceCodename[PROP_VALUE_MAX];
   GetCodename(deviceCodename);
   return strcmp(deviceCodename, "REL") != 0 &&
