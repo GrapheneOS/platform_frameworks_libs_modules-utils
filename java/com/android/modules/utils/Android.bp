@@ -71,6 +71,7 @@ java_library {
 java_library {
     name: "modules-utils-binary-xml",
     defaults: ["modules-utils-defaults"],
+    min_sdk_version: "31",
     srcs: [
         "BinaryXmlPullParser.java",
         "BinaryXmlSerializer.java",
