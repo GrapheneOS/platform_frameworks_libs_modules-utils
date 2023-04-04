@@ -10,9 +10,6 @@
     },
     {
       "name": "ModulesUtilsTests"
-    },
-    {
-      "name": "ComposHostTestCases"
     }
     // TODO: Re-enable when this is stable.
     // {
@@ -36,6 +33,13 @@
           "exclude-filter": "com.android.server.wifi.scanner.WifiScanningServiceTest"
         }
       ]
+    }
+  ],
+  // Run these on real devices in postsubmit while they're
+  // flakey on Cuttlefish. TODO(b/264496291): Fix this.
+  "avf-postsubmit": [
+    {
+        "name": "ComposHostTestCases"
     }
   ]
 }
