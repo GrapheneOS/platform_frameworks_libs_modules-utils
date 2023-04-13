@@ -54,7 +54,11 @@ inline bool IsAtLeastS() { return android_get_device_api_level() >= 31; }
 inline bool IsAtLeastT() { return android_get_device_api_level() >= 33; }
 
 // Checks if the device is running on release version of Android U or newer.
-inline bool IsAtLeastU() { return android_get_device_api_level() >= 34; }
+inline bool IsAtLeastU() {
+  return android_get_device_api_level() >= 34 ||
+         (android_get_device_api_level() == 33 &&
+          detail::IsAtLeastPreReleaseCodename("U"));
+}
 
 } // namespace sdklevel
 } // namespace modules
