@@ -57,7 +57,9 @@ public final class DeviceSdkLevel {
      * UpsideDownCake or newer
      */
     public boolean isDeviceAtLeastU() throws DeviceNotAvailableException {
-        return isDeviceAtLeastPreReleaseCodename("UpsideDownCake");
+        return device.getApiLevel() >= 34 ||
+                (device.getApiLevel() == 33 &&
+                        isDeviceAtLeastPreReleaseCodename("UpsideDownCake"));
     }
 
     private boolean isDeviceAtLeastPreReleaseCodename(@NonNull String codename)
