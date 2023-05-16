@@ -28,27 +28,33 @@ java_library {
     visibility: ["//visibility:public"],
 }
 
-// Depend on modules-utils-testable-device-config-defaults instead of this library.
+// TODO(b/281577492): split in 2 (one for just ExtendedMockito stuff)
+// NOTE: clients should depend on modules-utils-testable-device-config-defaults
+// instead of using this library directly (so it sets the proper JNI dependencies)
 java_library {
     name: "modules-utils-testable-device-config",
     srcs: [
         "StaticMockFixture.java",
         "StaticMockFixtureRule.java",
+        "ExtendedMockitoRule.java",
         "TestableDeviceConfig.java",
     ],
     static_libs: [
         "androidx.test.rules",
         "mockito-target-extended-minus-junit4",
         "modules-utils-build",
+        "modules-utils-preconditions",
     ],
     libs: [
         "framework-configinfrastructure",
+        "framework-annotations-lib",
     ],
     sdk_version: "module_current",
     min_sdk_version: "29",
     visibility: ["//visibility:public"],
 }
 
+// TODO(b/281577492): split in 2 (one for just ExtendedMockito stuff)
 // Utility for mocking DeviceConfig and other device state.
 // In order to use these utils successfully, both Java code and native libraries will be required.
 // If your code is in a library, you will have to depend on these defaults both in the library as
