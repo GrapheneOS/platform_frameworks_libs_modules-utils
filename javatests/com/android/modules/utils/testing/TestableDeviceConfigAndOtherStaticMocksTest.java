@@ -36,8 +36,8 @@ import java.util.List;
 @SmallTest
 public class TestableDeviceConfigAndOtherStaticMocksTest {
     @Rule
-    public StaticMockFixtureRule mStaticMockFixtureRule =
-            new StaticMockFixtureRule(TestableDeviceConfig::new, AB::new, CD::new);
+    public ExtendedMockitoRule mExtendedMockitoRule = new ExtendedMockitoRule.Builder(this)
+            .addStaticMockFixtures(TestableDeviceConfig::new, AB::new, CD::new).build();
 
     private List<String> mCollected;
 
