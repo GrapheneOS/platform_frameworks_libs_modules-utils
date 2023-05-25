@@ -2,6 +2,12 @@
 {
   "presubmit": [
     {
+      "name": "ModulesUtilsTestingTests"
+    },
+    {
+      "name": "UnboundedSdkLevelTest"
+    },
+    {
       // Unit tests for framework-wifi.jar
       "name": "FrameworksWifiApiTests"
     },
