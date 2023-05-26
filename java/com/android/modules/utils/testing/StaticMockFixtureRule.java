@@ -45,10 +45,7 @@ import java.util.function.Supplier;
  * public final StaticMockFixtureRule mStaticMockFixtureRule =
  *     new StaticMockFixtureRule(mStaticMockFixtures);
  * </pre>
- *
- * @deprecated use {@link ExtendedMockitoRule} instead.
  */
-@Deprecated
 public class StaticMockFixtureRule implements TestRule {
 
     private static final String TAG = StaticMockFixtureRule.class.getSimpleName();
