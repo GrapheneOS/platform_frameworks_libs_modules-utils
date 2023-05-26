@@ -18,6 +18,8 @@ package com.android.modules.utils.testing;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 
+import android.util.Log;
+
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 
@@ -45,6 +47,11 @@ import java.util.function.Supplier;
  * </pre>
  */
 public class StaticMockFixtureRule implements TestRule {
+
+    private static final String TAG = StaticMockFixtureRule.class.getSimpleName();
+
+    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
+
     private StaticMockitoSession mMockitoSession;
     private StaticMockFixture[] mStaticMockFixtures;
     private Supplier<? extends StaticMockFixture>[] mSupplier;
@@ -88,6 +95,9 @@ public class StaticMockFixtureRule implements TestRule {
             sessionBuilder = mStaticMockFixtures[i].setUpMockedClasses(sessionBuilder);
         }
 
+        if (DEBUG) {
+            Log.d(TAG, "Start mocking on " + description);
+        }
         mMockitoSession = sessionBuilder.startMocking();
 
         for (int i = 0; i < mStaticMockFixtures.length; i++) {
@@ -97,17 +107,17 @@ public class StaticMockFixtureRule implements TestRule {
         return new TestWatcher() {
             @Override
             protected void succeeded(Description description) {
-                tearDown(null);
+                tearDown(description, /* e=*/ null);
             }
 
             @Override
             protected void skipped(AssumptionViolatedException e, Description description) {
-                tearDown(e);
+                tearDown(description, e);
             }
 
             @Override
             protected void failed(Throwable e, Description description) {
-                tearDown(e);
+                tearDown(description, e);
             }
         }.apply(base, description);
     }
@@ -122,7 +132,10 @@ public class StaticMockFixtureRule implements TestRule {
         return mockitoSession().strictness(Strictness.LENIENT);
     }
 
-    private void tearDown(Throwable e) {
+    private void tearDown(Description description, Throwable e) {
+        if (DEBUG) {
+            Log.d(TAG, "Finishing mocking on " + description + " (e=" + e + ")");
+        }
         mMockitoSession.finishMocking(e);
 
         for (int i = mStaticMockFixtures.length - 1; i >= 0; i--) {
