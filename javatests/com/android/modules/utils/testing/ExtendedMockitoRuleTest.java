@@ -20,7 +20,10 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +35,7 @@ import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoFramework;
 import org.mockito.MockitoSession;
@@ -42,6 +46,7 @@ import org.mockito.listeners.MockitoListener;
 import org.mockito.plugins.MockitoPlugins;
 import org.mockito.quality.Strictness;
 
+import java.util.function.Supplier;
 
 @RunWith(MockitoJUnitRunner.class)
 public final class ExtendedMockitoRuleTest {
@@ -51,6 +56,9 @@ public final class ExtendedMockitoRuleTest {
     private @Mock Description mDescription;
     private @Mock Runnable mRunnable;
     private @Mock ExtendedMockitoRule.SessionBuilderVisitor mSessionBuilderVisitor;
+    private @Mock StaticMockFixture mStaticMockFixture1;
+    private @Mock StaticMockFixture mStaticMockFixture2;
+    private @Mock StaticMockFixture mStaticMockFixture3;
 
     private final ClassUnderTest mClassUnderTest = new ClassUnderTest();
     private final ExtendedMockitoRule.Builder mBuilder =
@@ -60,6 +68,15 @@ public final class ExtendedMockitoRuleTest {
     private final ExtendedMockitoRule.Builder mUnsafeBuilder =
             new ExtendedMockitoRule.Builder(mClassUnderTest).dontClearInlineMocks();
 
+    private final Supplier<StaticMockFixture> mSupplier1 = () -> {
+        return mStaticMockFixture1;
+    };
+    private final Supplier<StaticMockFixture> mSupplier2 = () -> {
+        return mStaticMockFixture2;
+    };
+    private final Supplier<StaticMockFixture> mSupplier3 = () -> {
+        return mStaticMockFixture3;
+    };
 
     @Test
     public void testBuilder_constructor_null() {
@@ -88,6 +105,12 @@ public final class ExtendedMockitoRuleTest {
     }
 
     @Test
+    public void testBuilder_addStaticMockFixtures_null() {
+        assertThrows(NullPointerException.class,
+                () -> mBuilder.addStaticMockFixtures((Supplier<StaticMockFixture>) null));
+    }
+
+    @Test
     public void testBuilder_afterSessionFinished_null() {
         assertThrows(NullPointerException.class, () -> mBuilder.afterSessionFinished(null));
     }
@@ -109,6 +132,13 @@ public final class ExtendedMockitoRuleTest {
         mBuilder.build().apply(mStatement, mDescription).evaluate();
 
         assertWithMessage("@Mock object").that(mClassUnderTest.mMock).isNotNull();
+    }
+
+    @Test
+    public void testMocksNotInitialized() throws Throwable {
+        new ExtendedMockitoRule.Builder().build().apply(mStatement, mDescription).evaluate();
+
+        assertWithMessage("@Mock object").that(mClassUnderTest.mMock).isNull();
     }
 
     @Test
@@ -269,6 +299,89 @@ public final class ExtendedMockitoRuleTest {
     }
 
     @Test
+    public void testAddStaticMockFixtures_once() throws Throwable {
+        InOrder inOrder = inOrder(mStaticMockFixture1, mStaticMockFixture2);
+
+        mUnsafeBuilder
+                .addStaticMockFixtures(mSupplier1, mSupplier2)
+                .build().apply(mStatement, mDescription).evaluate();
+
+        inOrder.verify(mStaticMockFixture1).setUpMockedClasses(any());
+        inOrder.verify(mStaticMockFixture2).setUpMockedClasses(any());
+
+        inOrder.verify(mStaticMockFixture1).setUpMockBehaviors();
+        inOrder.verify(mStaticMockFixture2).setUpMockBehaviors();
+
+        inOrder.verify(mStaticMockFixture2).tearDown();
+        inOrder.verify(mStaticMockFixture1).tearDown();
+    }
+
+    @Test
+    public void testAddStaticMockFixtures_twice() throws Throwable {
+        InOrder inOrder = inOrder(mStaticMockFixture1, mStaticMockFixture2, mStaticMockFixture3,
+                mStaticMockFixture3);
+
+        mUnsafeBuilder
+                .addStaticMockFixtures(mSupplier1, mSupplier2)
+                .addStaticMockFixtures(mSupplier3)
+                .build().apply(mStatement, mDescription).evaluate();
+
+        inOrder.verify(mStaticMockFixture1).setUpMockedClasses(any());
+        inOrder.verify(mStaticMockFixture2).setUpMockedClasses(any());
+        inOrder.verify(mStaticMockFixture3).setUpMockedClasses(any());
+
+        inOrder.verify(mStaticMockFixture1).setUpMockBehaviors();
+        inOrder.verify(mStaticMockFixture2).setUpMockBehaviors();
+        inOrder.verify(mStaticMockFixture3).setUpMockBehaviors();
+
+        inOrder.verify(mStaticMockFixture3).tearDown();
+        inOrder.verify(mStaticMockFixture2).tearDown();
+        inOrder.verify(mStaticMockFixture1).tearDown();
+    }
+
+    @Test
+    public void testMockAndSpyStaticAndAddStaticMockFixtures() throws Throwable {
+        InOrder inOrder = inOrder(mStaticMockFixture1, mStaticMockFixture2, mStaticMockFixture3,
+                mStaticMockFixture3);
+
+        mUnsafeBuilder
+                .mockStatic(StaticClass.class)
+                .spyStatic(AnotherStaticClass.class)
+                .addStaticMockFixtures(mSupplier1, mSupplier2)
+                .addStaticMockFixtures(mSupplier3)
+                .build()
+                .apply(new Statement() {
+                    @Override
+                    public void evaluate() throws Throwable {
+                        doReturn("mocko()").when(() -> StaticClass.marco());
+                        doReturn("MOCKO()").when(() -> AnotherStaticClass.marco());
+
+                        assertWithMessage("StaticClass.marco()")
+                                .that(StaticClass.marco()).isEqualTo("mocko()");
+                        assertWithMessage("StaticClass.water()")
+                                .that(StaticClass.water()).isNull(); // not mocked
+
+                        assertWithMessage("AnotherStaticClass.marco()")
+                                .that(AnotherStaticClass.marco()).isEqualTo("MOCKO()");
+                        assertWithMessage("AnotherStaticClass.water()")
+                                .that(AnotherStaticClass.water()).isEqualTo("POLO");
+                    }
+                }, mDescription).evaluate();
+
+        inOrder.verify(mStaticMockFixture1).setUpMockedClasses(any());
+        inOrder.verify(mStaticMockFixture2).setUpMockedClasses(any());
+        inOrder.verify(mStaticMockFixture3).setUpMockedClasses(any());
+
+        inOrder.verify(mStaticMockFixture1).setUpMockBehaviors();
+        inOrder.verify(mStaticMockFixture2).setUpMockBehaviors();
+        inOrder.verify(mStaticMockFixture3).setUpMockBehaviors();
+
+        inOrder.verify(mStaticMockFixture3).tearDown();
+        inOrder.verify(mStaticMockFixture2).tearDown();
+        inOrder.verify(mStaticMockFixture1).tearDown();
+    }
+
+    @Test
     public void testConfigureSessionBuilder_afterMockStatic() throws Throwable {
         assertThrows(IllegalStateException.class, () -> mBuilder.mockStatic(StaticClass.class)
                 .configureSessionBuilder(mSessionBuilderVisitor));
@@ -365,6 +478,21 @@ public final class ExtendedMockitoRuleTest {
     }
 
     @Test
+    public void testMockitoFrameworkCleared_whenStaticMockFixturesFailed() throws Throwable {
+        MyMockitoFramework mockitoFramework = new MyMockitoFramework();
+        RuntimeException exception = new RuntimeException("D'OH!");
+        doThrow(exception).when(mStaticMockFixture1).tearDown();
+
+        Exception thrown = assertThrows(Exception.class,
+                () -> mBuilder.setMockitoFrameworkForTesting(mockitoFramework)
+                        .addStaticMockFixtures(mSupplier1).build().apply(mStatement, mDescription)
+                        .evaluate());
+
+        assertWithMessage("exception").that(thrown).isSameInstanceAs(exception);
+        assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isTrue();
+    }
+
+    @Test
     public void testMockitoFrameworkCleared_whenSessionFailsToFinish() throws Throwable {
         MyMockitoFramework mockitoFramework = new MyMockitoFramework();
         MockitoSessionThatFailsToFinish mockitoSession = new MockitoSessionThatFailsToFinish();
@@ -435,6 +563,9 @@ public final class ExtendedMockitoRuleTest {
     // MockitoFramework because of that
     private static final class MyMockitoFramework implements MockitoFramework {
 
+        private static int sCounter;
+
+        private final int mId = ++sCounter;
         public boolean called;
 
         @Override
@@ -464,6 +595,11 @@ public final class ExtendedMockitoRuleTest {
         @Override
         public MockitoFramework addListener(MockitoListener arg0) {
             return null;
+        }
+
+        @Override
+        public String toString() {
+            return "MyMockitoFramework-" + mId;
         }
     };
 

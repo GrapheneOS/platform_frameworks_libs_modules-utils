@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import android.provider.DeviceConfig;
 import android.provider.DeviceConfig.Properties;
 import android.util.ArrayMap;
+import android.util.Log;
 import android.util.Pair;
 
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
@@ -52,6 +53,8 @@ import java.util.concurrent.Executor;
  */
 public final class TestableDeviceConfig implements StaticMockFixture {
 
+    private static final String TAG = TestableDeviceConfig.class.getSimpleName();
+
     private Map<DeviceConfig.OnPropertiesChangedListener, Pair<String, Executor>>
             mOnPropertiesChangedListenerMap = new HashMap<>();
     private Map<String, String> mKeyValueMap = new ConcurrentHashMap<>();
@@ -69,6 +72,7 @@ public final class TestableDeviceConfig implements StaticMockFixture {
     @Override
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
+        Log.v(TAG, "setUpMockedClasses(): spying DeviceConfig");
         sessionBuilder.spyStatic(DeviceConfig.class);
         return sessionBuilder;
     }
@@ -79,6 +83,7 @@ public final class TestableDeviceConfig implements StaticMockFixture {
     @Override
     public void setUpMockBehaviors() {
         doAnswer((Answer<Void>) invocationOnMock -> {
+            Log.v(TAG, "setUpMockBehaviors(): mocking call to " + invocationOnMock);
             String namespace = invocationOnMock.getArgument(0);
             Executor executor = invocationOnMock.getArgument(1);
             DeviceConfig.OnPropertiesChangedListener onPropertiesChangedListener =
@@ -91,6 +96,7 @@ public final class TestableDeviceConfig implements StaticMockFixture {
                 any(DeviceConfig.OnPropertiesChangedListener.class)));
 
         doAnswer((Answer<Boolean>) invocationOnMock -> {
+            Log.v(TAG, "setUpMockBehaviors(): mocking call to " + invocationOnMock);
             String namespace = invocationOnMock.getArgument(0);
             String name = invocationOnMock.getArgument(1);
             String value = invocationOnMock.getArgument(2);
@@ -122,6 +128,7 @@ public final class TestableDeviceConfig implements StaticMockFixture {
         }).when(() -> DeviceConfig.setProperties(any(Properties.class)));
 
         doAnswer((Answer<String>) invocationOnMock -> {
+            Log.v(TAG, "setUpMockBehaviors(): mocking call to " + invocationOnMock);
             String namespace = invocationOnMock.getArgument(0);
             String name = invocationOnMock.getArgument(1);
             return mKeyValueMap.get(getKey(namespace, name));
@@ -271,12 +278,25 @@ public final class TestableDeviceConfig implements StaticMockFixture {
      * <pre class="prettyprint">
      * &#064;Rule
      * public final TestableDeviceConfigRule mTestableDeviceConfigRule =
-     *     new TestableDeviceConfigRule();
+     *     new TestableDeviceConfigRule(this);
      * </pre>
      */
-    public static class TestableDeviceConfigRule extends StaticMockFixtureRule {
+    public static class TestableDeviceConfigRule extends ExtendedMockitoRule {
+
+        /**
+         * Creates the rule, without initializing any mock..
+         */
         public TestableDeviceConfigRule() {
-            super(TestableDeviceConfig::new);
+            super(new ExtendedMockitoRule.Builder()
+                    .addStaticMockFixtures(TestableDeviceConfig::new));
+        }
+
+        /**
+         * Creates the rule, initializing the mocks for the given test.
+         */
+        public TestableDeviceConfigRule(Object testClassInstance) {
+            super(new ExtendedMockitoRule.Builder(testClassInstance)
+                    .addStaticMockFixtures(TestableDeviceConfig::new));
         }
     }
 }
