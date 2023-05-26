@@ -35,12 +35,8 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Rule to make it easier to use Extended Mockito:
@@ -70,7 +66,6 @@ public class ExtendedMockitoRule implements TestRule {
     private @Nullable final Runnable mAfterSessionFinishedCallback;
     private final List<Class<?>> mMockedStaticClasses;
     private final List<Class<?>> mSpiedStaticClasses;
-    private final List<StaticMockFixture> mStaticMockFixtures;
     private final @Nullable SessionBuilderVisitor mSessionBuilderConfigurator;
     private final boolean mClearInlineMocks;
 
@@ -85,14 +80,11 @@ public class ExtendedMockitoRule implements TestRule {
         mSessionBuilderConfigurator = builder.mSessionBuilderConfigurator;
         mMockedStaticClasses = builder.mMockedStaticClasses;
         mSpiedStaticClasses = builder.mSpiedStaticClasses;
-        mStaticMockFixtures = builder.mStaticMockFixtures == null ? Collections.emptyList()
-                : builder.mStaticMockFixtures;
         mClearInlineMocks = builder.mClearInlineMocks;
         Log.v(TAG, "strictness=" + mStrictness + ", testClassInstance" + mTestClassInstance
                 + ", mockedStaticClasses=" + mMockedStaticClasses
                 + ", spiedStaticClasses=" + mSpiedStaticClasses
-                + ", staticMockFixtures=" + mStaticMockFixtures
-                + ", sessionBuilderConfigurator=" + mSessionBuilderConfigurator
+                + ", mSessionBuilderConfigurator=" + mSessionBuilderConfigurator
                 + ", afterSessionFinishedCallback=" + mAfterSessionFinishedCallback
                 + ", mockitoFramework=" + mMockitoFramework
                 + ", mockitoSession=" + mMockitoSession
@@ -101,7 +93,10 @@ public class ExtendedMockitoRule implements TestRule {
 
     @Override
     public Statement apply(Statement base, Description description) {
-        createMockitoSession(description);
+        createMockitoSession();
+
+        // TODO(b/281577492): will need to provide a afterSessionCreated() callback in order to
+        // change StaticMockFixtureRule to use it
 
         return new TestWatcher() {
             @Override
@@ -121,75 +116,39 @@ public class ExtendedMockitoRule implements TestRule {
         }.apply(base, description);
     }
 
-    private void createMockitoSession(Description description) {
-        Log.v(TAG, "Creating session builder with strictness " + mStrictness);
-        StaticMockitoSessionBuilder mSessionBuilder = mockitoSession().strictness(mStrictness);
+    private void createMockitoSession() {
+        Log.v(TAG, "Creating (and initializing mocks on) session builder with strictness "
+                + mStrictness);
+        StaticMockitoSessionBuilder sessionBuilder = mockitoSession().strictness(mStrictness)
+                .initMocks(mTestClassInstance);
 
-        setUpMockedClasses(mSessionBuilder);
-
-        if (mTestClassInstance != null) {
-            Log.v(TAG, "Initializing mocks on " + description + " using " + mSessionBuilder);
-            mSessionBuilder.initMocks(mTestClassInstance);
-        } else {
-            Log.v(TAG, "NOT Initializing mocks on " + description + " as requested by builder");
-        }
+        setUpMockedClasses(sessionBuilder);
 
         if (mMockitoSession != null) {
             Log.d(TAG, "NOT creating session as set on builder: " + mMockitoSession);
         } else {
-            Log.d(TAG, "Creating mockito session using " + mSessionBuilder);
-            mMockitoSession = mSessionBuilder.startMocking();
+            Log.v(TAG, "Creating mockito session using " + sessionBuilder);
+            mMockitoSession = sessionBuilder.startMocking();
         }
-
-        setUpMockBehaviors();
     }
 
     private void setUpMockedClasses(StaticMockitoSessionBuilder sessionBuilder) {
-        if (!mStaticMockFixtures.isEmpty()) {
-            for (StaticMockFixture fixture : mStaticMockFixtures) {
-                Log.v(TAG, "Calling setUpMockedClasses(" + sessionBuilder + ") on " + fixture);
-                fixture.setUpMockedClasses(sessionBuilder);
-            }
-        }
-        for (Class<?> clazz: mMockedStaticClasses) {
-            Log.v(TAG, "Calling mockStatic() on " + clazz);
-            sessionBuilder.mockStatic(clazz);
-        }
-        for (Class<?> clazz: mSpiedStaticClasses) {
-            Log.v(TAG, "Calling spyStatic() on " + clazz);
-            sessionBuilder.spyStatic(clazz);
-        }
+        mMockedStaticClasses.forEach((c) -> sessionBuilder.mockStatic(c));
+        mSpiedStaticClasses.forEach((c) -> sessionBuilder.spyStatic(c));
         if (mSessionBuilderConfigurator != null) {
             Log.v(TAG, "Visiting " + mSessionBuilderConfigurator + " with " + sessionBuilder);
             mSessionBuilderConfigurator.visit(sessionBuilder);
         }
     }
 
-    private void setUpMockBehaviors() {
-        if (mStaticMockFixtures.isEmpty()) {
-            Log.v(TAG, "setUpMockBehaviors(): not needed, mStaticMockFixtures is empty");
-            return;
-        }
-        for (StaticMockFixture fixture : mStaticMockFixtures) {
-            Log.v(TAG, "Calling setUpMockBehaviors() on " + fixture);
-            fixture.setUpMockBehaviors();
-        }
-    }
-
     private void tearDown(Description description, Throwable e) {
-        Log.d(TAG, "Finishing mockito session " + mMockitoSession + " on " + description
-                + (e == null ? "" : " (which failed with " + e + ")"));
+        Log.v(TAG, "Finishing mockito session " + mMockitoSession + " on " + description
+                + " (e=" + e + ")");
         try {
             try {
                 mMockitoSession.finishMocking(e);
                 mMockitoSession = null;
             } finally {
-                // Must iterate in reverse order
-                for (int i = mStaticMockFixtures.size() - 1; i >= 0; i--) {
-                    StaticMockFixture fixture = mStaticMockFixtures.get(i);
-                    Log.v(TAG, "Calling tearDown() on " + fixture);
-                    fixture.tearDown();
-                }
                 if (mAfterSessionFinishedCallback != null) {
                     mAfterSessionFinishedCallback.run();
                 }
@@ -221,7 +180,6 @@ public class ExtendedMockitoRule implements TestRule {
         private final Object mTestClassInstance;
         private final List<Class<?>> mMockedStaticClasses = new ArrayList<>();
         private final List<Class<?>> mSpiedStaticClasses = new ArrayList<>();
-        private @Nullable List<StaticMockFixture> mStaticMockFixtures;
         private Strictness mStrictness = Strictness.LENIENT;
         private @Nullable MockitoFramework mMockitoFramework;
         private @Nullable MockitoSession mMockitoSession;
@@ -230,20 +188,10 @@ public class ExtendedMockitoRule implements TestRule {
         private boolean mClearInlineMocks = true;
 
         /**
-         * Constructs a builder for the giving test instance (typically {@code this}) and initialize
-         * mocks on it.
+         * Constructs a builder for the giving test instance (typically {@code this}).
          */
         public Builder(Object testClassInstance) {
             mTestClassInstance = Objects.requireNonNull(testClassInstance);
-        }
-
-        /**
-         * Constructs a builder that doesn't initialize mocks.
-         *
-         * <p>Typically used on test classes that already initialize mocks somewhere else.
-         */
-        public Builder() {
-            mTestClassInstance = null;
         }
 
         /**
@@ -282,34 +230,15 @@ public class ExtendedMockitoRule implements TestRule {
             return this;
         }
 
-        /**
-         * Uses the supplied {@link StaticMockFixture} as well.
-         */
-        @SafeVarargs
-        public final Builder addStaticMockFixtures(
-                Supplier<? extends StaticMockFixture>... suppliers) {
-            List<StaticMockFixture> fixtures = Arrays
-                    .stream(Objects.requireNonNull(suppliers)).map(s -> s.get())
-                    .collect(Collectors.toList());
-            if (mStaticMockFixtures == null) {
-                mStaticMockFixtures = fixtures;
-            } else {
-                mStaticMockFixtures.addAll(fixtures);
-            }
-            return this;
-        }
-
-        // TODO(b/281577492): remove once CachedAppOptimizerTest doesn't use anymore
+        // TODO(b/281577492): remove if / when it supports StaticMockFixture, as it's only used by
+        // CachedAppOptimizerTest
         /**
          * Alternative for {@link #spyStatic(Class)} / {@link #mockStatic(Class)}; typically used
          * when the same setup is shared by multiple tests.
          *
-         * @deprecated use {@link #addStaticMockFixtures(Supplier...)} instead
-         *
          * @throws IllegalStateException if {@link #mockStatic(Class)} or {@link #spyStatic(Class)}
          * was called before.
          */
-        @Deprecated
         public Builder configureSessionBuilder(
                 SessionBuilderVisitor sessionBuilderConfigurator) {
             Preconditions.checkState(mMockedStaticClasses.isEmpty(),
@@ -341,14 +270,14 @@ public class ExtendedMockitoRule implements TestRule {
             return this;
         }
 
-        // Used by ExtendedMockitoRuleTest itself
+        // Used mostly by ExtendedMockitoRuleTest itself
         @VisibleForTesting
         Builder setMockitoFrameworkForTesting(MockitoFramework mockitoFramework) {
             mMockitoFramework = Objects.requireNonNull(mockitoFramework);
             return this;
         }
 
-        // Used by ExtendedMockitoRuleTest itself
+        // Used mostly by ExtendedMockitoRuleTest itself
         @VisibleForTesting
         Builder setMockitoSessionForTesting(MockitoSession mockitoSession) {
             mMockitoSession = Objects.requireNonNull(mockitoSession);
