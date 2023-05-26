@@ -20,46 +20,41 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
+
 import org.junit.Test;
 import org.junit.runner.Description;
-import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
 import org.mockito.Mock;
 import org.mockito.MockitoFramework;
-import org.mockito.MockitoSession;
 import org.mockito.exceptions.misusing.UnnecessaryStubbingException;
 import org.mockito.invocation.InvocationFactory;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.listeners.MockitoListener;
 import org.mockito.plugins.MockitoPlugins;
 import org.mockito.quality.Strictness;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(MockitoJUnitRunner.class)
 public final class ExtendedMockitoRuleTest {
+
     public static final String TAG = ExtendedMockitoRuleTest.class.getSimpleName();
 
-    private @Mock Statement mStatement;
-    private @Mock Description mDescription;
-    private @Mock Runnable mRunnable;
-    private @Mock ExtendedMockitoRule.SessionBuilderVisitor mSessionBuilderVisitor;
+    private final Statement mStatement = mock(Statement.class);
+    private final Description mDescription = mock(Description.class);
 
     private final ClassUnderTest mClassUnderTest = new ClassUnderTest();
     private final ExtendedMockitoRule.Builder mBuilder =
             new ExtendedMockitoRule.Builder(mClassUnderTest);
-    // Builder that doesn't clear inline methods at the end - should be used in methods that
-    // need to verify mocks
-    private final ExtendedMockitoRule.Builder mUnsafeBuilder =
-            new ExtendedMockitoRule.Builder(mClassUnderTest).dontClearInlineMocks();
 
+    private final MySessionBuilderVisitor mConfigurator =
+            new MySessionBuilderVisitor();
 
     @Test
     public void testBuilder_constructor_null() {
@@ -93,15 +88,8 @@ public final class ExtendedMockitoRuleTest {
     }
 
     @Test
-    public void testBuilder_setMockitoFrameworkForTesting_null() {
-        assertThrows(NullPointerException.class,
-                () -> mBuilder.setMockitoFrameworkForTesting(null));
-    }
-
-    @Test
-    public void testBuilder_setMockitoSessionForTesting_null() {
-        assertThrows(NullPointerException.class,
-                () -> mBuilder.setMockitoSessionForTesting(null));
+    public void testBuilder_mockitoFramework_null() {
+        assertThrows(NullPointerException.class, () -> mBuilder.mockitoFramework(null));
     }
 
     @Test
@@ -258,123 +246,73 @@ public final class ExtendedMockitoRuleTest {
 
     @Test
     public void testSpyStatic_afterConfigureSessionBuilder() throws Throwable {
-        assertThrows(IllegalStateException.class, () -> mBuilder
-                .configureSessionBuilder(mSessionBuilderVisitor).spyStatic(StaticClass.class));
+        assertThrows(IllegalStateException.class,
+                () -> mBuilder.configureSessionBuilder(mConfigurator).spyStatic(StaticClass.class));
     }
 
     @Test
     public void testMockStatic_afterConfigureSessionBuilder() throws Throwable {
         assertThrows(IllegalStateException.class, () -> mBuilder
-                .configureSessionBuilder(mSessionBuilderVisitor).mockStatic(StaticClass.class));
+                .configureSessionBuilder(mConfigurator).mockStatic(StaticClass.class));
     }
 
     @Test
     public void testConfigureSessionBuilder_afterMockStatic() throws Throwable {
         assertThrows(IllegalStateException.class, () -> mBuilder.mockStatic(StaticClass.class)
-                .configureSessionBuilder(mSessionBuilderVisitor));
+                .configureSessionBuilder(mConfigurator));
     }
 
     @Test
     public void testConfigureSessionBuilder_afterSpyStatic() throws Throwable {
         assertThrows(IllegalStateException.class, () -> mBuilder.spyStatic(StaticClass.class)
-                .configureSessionBuilder(mSessionBuilderVisitor));
+                .configureSessionBuilder(mConfigurator));
     }
 
     @Test
     public void testConfigureSessionBuilder() throws Throwable {
-        mUnsafeBuilder.configureSessionBuilder(mSessionBuilderVisitor)
+        mBuilder.configureSessionBuilder(mConfigurator)
                 .build().apply(mStatement, mDescription).evaluate();
 
-        verify(mSessionBuilderVisitor).visit(notNull());
+        assertWithMessage("visited session builder").that(mConfigurator.sessionBuilder).isNotNull();
     }
 
     @Test
-    public void testAfterSessionFinished() throws Throwable {
-        mUnsafeBuilder.afterSessionFinished(mRunnable).build().apply(mStatement, mDescription)
-                .evaluate();
+    public void testAfterSessionFinishedCallback() throws Throwable {
+        // Better not use a mock to avoid "crossed stream" issues
+        AtomicBoolean called = new AtomicBoolean();
+        Runnable runnable = () -> called.set(true);
 
-        verify(mRunnable).run();
-    }
+        mBuilder.afterSessionFinished(runnable).build().apply(mStatement, mDescription).evaluate();
 
-    @Test
-    public void testAfterSessionFinished_whenSessionFailsToFinish() throws Throwable {
-        MockitoSessionThatFailsToFinish mockitoSession = new MockitoSessionThatFailsToFinish();
-
-        Exception thrown = assertThrows(Exception.class,
-                () -> mUnsafeBuilder.afterSessionFinished(mRunnable)
-                        .setMockitoSessionForTesting(mockitoSession)
-                        .build().apply(mStatement, mDescription).evaluate());
-
-        assertWithMessage("exception").that(thrown).isSameInstanceAs(mockitoSession.e);
-        verify(mRunnable).run();
+        assertWithMessage("runnable called").that(called.get()).isTrue();
     }
 
     @Test
     public void testMockitoFrameworkCleared() throws Throwable {
+        // Better not use a mock to avoid "crossed stream" issues
         MyMockitoFramework mockitoFramework = new MyMockitoFramework();
 
-        mBuilder.setMockitoFrameworkForTesting(mockitoFramework).build()
-                .apply(mStatement, mDescription)
+        mBuilder.mockitoFramework(mockitoFramework).build().apply(mStatement, mDescription)
                 .evaluate();
 
         assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isTrue();
     }
 
     @Test
-    public void testMockitoFrameworkNotCleared_whenSetOnBuilder() throws Throwable {
-        MyMockitoFramework mockitoFramework = new MyMockitoFramework();
-
-        mBuilder.dontClearInlineMocks().setMockitoFrameworkForTesting(mockitoFramework).build()
-                .apply(mStatement, mDescription)
-                .evaluate();
-
-        assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isFalse();
-    }
-
-    @Test
-    public void testMockitoFrameworkCleared_whenTestFails() throws Throwable {
+    public void testMockitoFrameworkClearedWhenTestFails() throws Throwable {
+        // Better not use a mock to avoid "crossed stream" issues
         MyMockitoFramework mockitoFramework = new MyMockitoFramework();
         Exception exception = new Exception("D'OH!");
 
         Exception thrown = assertThrows(Exception.class,
-                () -> mBuilder.setMockitoFrameworkForTesting(mockitoFramework).build()
-                        .apply(new Statement() {
-                            @Override
-                            public void evaluate() throws Throwable {
-                                throw exception;
-                            }
-                        }, mDescription).evaluate());
+                () -> mBuilder.mockitoFramework(mockitoFramework).build().apply(new Statement() {
+                    @Override
+                    public void evaluate() throws Throwable {
+                        throw exception;
+                    }
+                }, mDescription).evaluate());
 
         assertWithMessage("exception").that(thrown).isSameInstanceAs(exception);
-        assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isTrue();
-    }
-
-    @Test
-    public void testMockitoFrameworkCleared_whenAfterSessionFinished() throws Throwable {
-        MyMockitoFramework mockitoFramework = new MyMockitoFramework();
-        RuntimeException exception = new RuntimeException("D'OH!");
-
-        Exception thrown = assertThrows(Exception.class,
-                () -> mBuilder.setMockitoFrameworkForTesting(mockitoFramework)
-                        .afterSessionFinished(() -> {
-                            throw exception;
-                        }).build().apply(mStatement, mDescription).evaluate());
-
-        assertWithMessage("exception").that(thrown).isSameInstanceAs(exception);
-        assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isTrue();
-    }
-
-    @Test
-    public void testMockitoFrameworkCleared_whenSessionFailsToFinish() throws Throwable {
-        MyMockitoFramework mockitoFramework = new MyMockitoFramework();
-        MockitoSessionThatFailsToFinish mockitoSession = new MockitoSessionThatFailsToFinish();
-
-        Exception thrown = assertThrows(Exception.class,
-                () -> mBuilder.setMockitoFrameworkForTesting(mockitoFramework)
-                        .setMockitoSessionForTesting(mockitoSession).build()
-                        .apply(mStatement, mDescription).evaluate());
-
-        assertWithMessage("exception").that(thrown).isSameInstanceAs(mockitoSession.e);
         assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isTrue();
     }
 
@@ -431,8 +369,16 @@ public final class ExtendedMockitoRuleTest {
         }
     }
 
-    // Used on tests that check if the clearInlineMocks() is called - such tests cannot mock a
-    // MockitoFramework because of that
+    private static final class MySessionBuilderVisitor
+            implements ExtendedMockitoRule.SessionBuilderVisitor {
+        public StaticMockitoSessionBuilder sessionBuilder;
+
+        @Override
+        public void visit(StaticMockitoSessionBuilder builder) {
+            sessionBuilder = builder;
+        }
+    }
+
     private static final class MyMockitoFramework implements MockitoFramework {
 
         public boolean called;
@@ -467,23 +413,4 @@ public final class ExtendedMockitoRuleTest {
         }
     };
 
-    // Used on tests that check if the clearInlineMocks() is called - such tests cannot mock a
-    // MockitoSession because of that
-    private static final class MockitoSessionThatFailsToFinish implements MockitoSession {
-        public final RuntimeException e = new RuntimeException("D'OH!");
-
-        @Override
-        public void setStrictness(Strictness strictness) {
-        }
-
-        @Override
-        public void finishMocking() {
-            throw e;
-        }
-
-        @Override
-        public void finishMocking(Throwable failure) {
-            throw e;
-        }
-    }
 }
