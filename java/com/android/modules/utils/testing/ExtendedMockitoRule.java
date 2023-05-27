@@ -24,8 +24,14 @@ import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
+import org.junit.AssumptionViolatedException;
+import org.junit.rules.TestRule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 import org.mockito.Mockito;
 import org.mockito.MockitoFramework;
+import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
@@ -33,12 +39,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Rule to make it easier to use Extended Mockito.
- *
- * <p>It's derived from {@link StaticMockFixtureRule}, with the additional features:
+ * Rule to make it easier to use Extended Mockito:
  *
  * <ul>
- *   <li>Easier to define which classes must be statically mocked or spied
+ *   <li>Automatically creates and finishes the mock session.
+ *   <li>Provides multiple ways to set which classes must be statically mocked or spied
  *   <li>Automatically starts mocking (so tests don't need a mockito runner or rule)
  *   <li>Automatically clears the inlined mocks at the end (to avoid OOM)
  *   <li>Allows other customization like strictness
@@ -51,49 +56,121 @@ import java.util.Objects;
  *     .build();
  * </pre>
  */
-public class ExtendedMockitoRule extends StaticMockFixtureRule {
+public class ExtendedMockitoRule implements TestRule {
 
     private static final String TAG = ExtendedMockitoRule.class.getSimpleName();
-
-    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     private final Object mTestClassInstance;
     private final Strictness mStrictness;
     private @Nullable final MockitoFramework mMockitoFramework;
+    private @Nullable final Runnable mAfterSessionFinishedCallback;
+    private final List<Class<?>> mMockedStaticClasses;
+    private final List<Class<?>> mSpiedStaticClasses;
+    private final @Nullable SessionBuilderVisitor mSessionBuilderConfigurator;
+    private final boolean mClearInlineMocks;
 
-    private ExtendedMockitoRule(Builder builder) {
-        super(() -> new SimpleStaticMockFixture(builder.mMockedStaticClasses,
-                builder.mSpiedStaticClasses, builder.mSessionBuilderConfigurator,
-                builder.mAfterSessionFinishedCallback, builder.mMockitoFramework));
+    private MockitoSession mMockitoSession;
+
+    protected ExtendedMockitoRule(Builder builder) {
         mTestClassInstance = builder.mTestClassInstance;
         mStrictness = builder.mStrictness;
         mMockitoFramework = builder.mMockitoFramework;
-        if (DEBUG) {
-            Log.d(TAG, "strictness=" + mStrictness + ", testClassInstance" + mTestClassInstance
-                    + ", mockedStaticClasses=" + builder.mMockedStaticClasses
-                    + ", spiedStaticClasses=" + builder.mSpiedStaticClasses
-                    + ", mSessionBuilderConfigurator="
-                    + builder.mSessionBuilderConfigurator
-                    + ", afterSessionFinishedCallback=" + builder.mAfterSessionFinishedCallback
-                    + ", mockitoFramework=" + builder.mMockitoFramework);
-        }
+        mMockitoSession = builder.mMockitoSession;
+        mAfterSessionFinishedCallback = builder.mAfterSessionFinishedCallback;
+        mSessionBuilderConfigurator = builder.mSessionBuilderConfigurator;
+        mMockedStaticClasses = builder.mMockedStaticClasses;
+        mSpiedStaticClasses = builder.mSpiedStaticClasses;
+        mClearInlineMocks = builder.mClearInlineMocks;
+        Log.v(TAG, "strictness=" + mStrictness + ", testClassInstance" + mTestClassInstance
+                + ", mockedStaticClasses=" + mMockedStaticClasses
+                + ", spiedStaticClasses=" + mSpiedStaticClasses
+                + ", mSessionBuilderConfigurator=" + mSessionBuilderConfigurator
+                + ", afterSessionFinishedCallback=" + mAfterSessionFinishedCallback
+                + ", mockitoFramework=" + mMockitoFramework
+                + ", mockitoSession=" + mMockitoSession
+                + ", clearInlineMocks=" + mClearInlineMocks);
     }
 
     @Override
-    public StaticMockitoSessionBuilder getSessionBuilder() {
-        StaticMockitoSessionBuilder sessionBuilder;
-        if (mStrictness != null) {
-            sessionBuilder = mockitoSession().strictness(mStrictness);
-            if (DEBUG) {
-                Log.d(TAG, "Setting strictness to " + mStrictness + " on " + sessionBuilder);
+    public Statement apply(Statement base, Description description) {
+        createMockitoSession();
+
+        // TODO(b/281577492): will need to provide a afterSessionCreated() callback in order to
+        // change StaticMockFixtureRule to use it
+
+        return new TestWatcher() {
+            @Override
+            protected void succeeded(Description description) {
+                tearDown(description, /* e=*/ null);
             }
+
+            @Override
+            protected void skipped(AssumptionViolatedException e, Description description) {
+                tearDown(description, e);
+            }
+
+            @Override
+            protected void failed(Throwable e, Description description) {
+                tearDown(description, e);
+            }
+        }.apply(base, description);
+    }
+
+    private void createMockitoSession() {
+        Log.v(TAG, "Creating (and initializing mocks on) session builder with strictness "
+                + mStrictness);
+        StaticMockitoSessionBuilder sessionBuilder = mockitoSession().strictness(mStrictness)
+                .initMocks(mTestClassInstance);
+
+        setUpMockedClasses(sessionBuilder);
+
+        if (mMockitoSession != null) {
+            Log.d(TAG, "NOT creating session as set on builder: " + mMockitoSession);
         } else {
-            sessionBuilder = super.getSessionBuilder();
+            Log.v(TAG, "Creating mockito session using " + sessionBuilder);
+            mMockitoSession = sessionBuilder.startMocking();
         }
-        if (DEBUG) {
-            Log.d(TAG, "Initializing mocks on " + mTestClassInstance);
+    }
+
+    private void setUpMockedClasses(StaticMockitoSessionBuilder sessionBuilder) {
+        mMockedStaticClasses.forEach((c) -> sessionBuilder.mockStatic(c));
+        mSpiedStaticClasses.forEach((c) -> sessionBuilder.spyStatic(c));
+        if (mSessionBuilderConfigurator != null) {
+            Log.v(TAG, "Visiting " + mSessionBuilderConfigurator + " with " + sessionBuilder);
+            mSessionBuilderConfigurator.visit(sessionBuilder);
         }
-        return sessionBuilder.initMocks(mTestClassInstance);
+    }
+
+    private void tearDown(Description description, Throwable e) {
+        Log.v(TAG, "Finishing mockito session " + mMockitoSession + " on " + description
+                + " (e=" + e + ")");
+        try {
+            try {
+                mMockitoSession.finishMocking(e);
+                mMockitoSession = null;
+            } finally {
+                if (mAfterSessionFinishedCallback != null) {
+                    mAfterSessionFinishedCallback.run();
+                }
+            }
+        } finally {
+            clearInlineMocks();
+        }
+    }
+
+    private void clearInlineMocks() {
+        if (!mClearInlineMocks) {
+            Log.d(TAG, "NOT calling clearInlineMocks() as set on builder");
+            return;
+        }
+        if (mMockitoFramework != null) {
+            Log.v(TAG, "Calling clearInlineMocks() on custom mockito framework: "
+                    + mMockitoFramework);
+            mMockitoFramework.clearInlineMocks();
+            return;
+        }
+        Log.v(TAG, "Calling Mockito.framework().clearInlineMocks()");
+        Mockito.framework().clearInlineMocks();
     }
 
     /**
@@ -103,10 +180,12 @@ public class ExtendedMockitoRule extends StaticMockFixtureRule {
         private final Object mTestClassInstance;
         private final List<Class<?>> mMockedStaticClasses = new ArrayList<>();
         private final List<Class<?>> mSpiedStaticClasses = new ArrayList<>();
-        private @Nullable Strictness mStrictness;
+        private Strictness mStrictness = Strictness.LENIENT;
         private @Nullable MockitoFramework mMockitoFramework;
+        private @Nullable MockitoSession mMockitoSession;
         private @Nullable SessionBuilderVisitor mSessionBuilderConfigurator;
         private @Nullable Runnable mAfterSessionFinishedCallback;
+        private boolean mClearInlineMocks = true;
 
         /**
          * Constructs a builder for the giving test instance (typically {@code this}).
@@ -151,6 +230,8 @@ public class ExtendedMockitoRule extends StaticMockFixtureRule {
             return this;
         }
 
+        // TODO(b/281577492): remove if / when it supports StaticMockFixture, as it's only used by
+        // CachedAppOptimizerTest
         /**
          * Alternative for {@link #spyStatic(Class)} / {@link #mockStatic(Class)}; typically used
          * when the same setup is shared by multiple tests.
@@ -169,19 +250,37 @@ public class ExtendedMockitoRule extends StaticMockFixtureRule {
         }
 
         /**
-         * Executes the given code after the callback finished.
+         * Runs the given {@code runnable} after the session finished.
          *
-         * <p>Typically used for clean-up code that cannot be executed on <code>@After</code>
+         * <p>Typically used for clean-up code that cannot be executed on {@code &#064;After}, as
+         * those methods are called before the session is finished.
          */
         public Builder afterSessionFinished(Runnable runnable) {
             mAfterSessionFinishedCallback = Objects.requireNonNull(runnable);
             return this;
         }
 
+        /**
+         * By default, it cleans up inline mocks after the session is closed to prevent OutOfMemory
+         * errors (see <a href="https://github.com/mockito/mockito/issues/1614">external bug</a>
+         * and/or <a href="http://b/259280359">internal bug</a>); use this method to not do so.
+         */
+        public Builder dontClearInlineMocks() {
+            mClearInlineMocks  = false;
+            return this;
+        }
+
         // Used mostly by ExtendedMockitoRuleTest itself
         @VisibleForTesting
-        Builder mockitoFramework(MockitoFramework mockitoFramework) {
+        Builder setMockitoFrameworkForTesting(MockitoFramework mockitoFramework) {
             mMockitoFramework = Objects.requireNonNull(mockitoFramework);
+            return this;
+        }
+
+        // Used mostly by ExtendedMockitoRuleTest itself
+        @VisibleForTesting
+        Builder setMockitoSessionForTesting(MockitoSession mockitoSession) {
+            mMockitoSession = Objects.requireNonNull(mockitoSession);
             return this;
         }
 
@@ -204,73 +303,6 @@ public class ExtendedMockitoRule extends StaticMockFixtureRule {
             Preconditions.checkState(!mSpiedStaticClasses.contains(clazz),
                     "class %s already spied", clazz);
             return clazz;
-        }
-    }
-
-    private static final class SimpleStaticMockFixture implements StaticMockFixture {
-
-        private final List<Class<?>> mMockedStaticClasses;
-        private final List<Class<?>> mSpiedStaticClasses;
-        @Nullable
-        private final SessionBuilderVisitor mSessionBuilderConfigurator;
-        @Nullable
-        private final Runnable mAfterSessionFinishedCallback;
-        @Nullable
-        private final MockitoFramework mMockitoFramework;
-
-        private SimpleStaticMockFixture(List<Class<?>> mockedStaticClasses,
-                List<Class<?>> spiedStaticClasses,
-                @Nullable SessionBuilderVisitor dynamicSessionBuilderConfigurator,
-                @Nullable Runnable afterSessionFinishedCallback,
-                @Nullable MockitoFramework mockitoFramework) {
-            mMockedStaticClasses = mockedStaticClasses;
-            mSpiedStaticClasses = spiedStaticClasses;
-            mSessionBuilderConfigurator = dynamicSessionBuilderConfigurator;
-            mAfterSessionFinishedCallback = afterSessionFinishedCallback;
-            mMockitoFramework = mockitoFramework;
-        }
-
-        @Override
-        public StaticMockitoSessionBuilder setUpMockedClasses(
-                StaticMockitoSessionBuilder sessionBuilder) {
-            mMockedStaticClasses.forEach((c) -> sessionBuilder.mockStatic(c));
-            mSpiedStaticClasses.forEach((c) -> sessionBuilder.spyStatic(c));
-            if (mSessionBuilderConfigurator != null) {
-                if (DEBUG) {
-                    Log.d(TAG, "Visiting " + mSessionBuilderConfigurator + " with "
-                            + sessionBuilder);
-                }
-                mSessionBuilderConfigurator.visit(sessionBuilder);
-            }
-            return sessionBuilder;
-        }
-
-        @Override
-        public void setUpMockBehaviors() {
-        }
-
-        @Override
-        public void tearDown() {
-            try {
-                if (mAfterSessionFinishedCallback != null) {
-                    mAfterSessionFinishedCallback.run();
-                }
-            } finally {
-                // When using inline mock maker, clean up inline mocks to prevent OutOfMemory
-                // errors. See https://github.com/mockito/mockito/issues/1614 and b/259280359.
-                if (mMockitoFramework != null) {
-                    if (DEBUG) {
-                        Log.d(TAG, "Calling clearInlineMocks() on custom mockito framework: "
-                                + mMockitoFramework);
-                    }
-                    mMockitoFramework.clearInlineMocks();
-                } else {
-                    if (DEBUG) {
-                        Log.d(TAG, "Calling Mockito.framework().clearInlineMocks()");
-                    }
-                    Mockito.framework().clearInlineMocks();
-                }
-            }
         }
     }
 
