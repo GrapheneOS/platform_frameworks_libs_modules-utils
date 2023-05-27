@@ -34,6 +34,7 @@ java_library {
 java_library {
     name: "modules-utils-testable-device-config",
     srcs: [
+        "AbstractExtendedMockitoRule.java",
         "StaticMockFixture.java",
         "StaticMockFixtureRule.java",
         "ExtendedMockitoRule.java",
