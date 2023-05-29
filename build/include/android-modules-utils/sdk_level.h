@@ -60,6 +60,12 @@ inline bool IsAtLeastU() {
           detail::IsAtLeastPreReleaseCodename("U"));
 }
 
+// Checks if the device is running on release version of Android V or newer.
+inline bool IsAtLeastV() {
+  return android_get_device_api_level() >= 34 &&
+         detail::IsAtLeastPreReleaseCodename("VanillaIceCream");
+}
+
 } // namespace sdklevel
 } // namespace modules
 } // namespace android
