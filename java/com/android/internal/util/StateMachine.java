@@ -726,13 +726,22 @@ public class StateMachine {
          */
         private class StateInfo {
             /** The state */
-            State state;
+            final State state;
 
             /** The parent of this state, null if there is no parent */
-            StateInfo parentStateInfo;
+            final StateInfo parentStateInfo;
 
             /** True when the state has been entered and on the stack */
-            boolean active;
+            // Note that this can be initialized on a different thread than it's used as long
+            // as it's only used on one thread. The reason is that it's initialized to false,
+            // which is also the default value for a boolean, so if the member is seen uninitialized
+            // then it's seen with the default value which is also false.
+            boolean active = false;
+
+            StateInfo(final State state, final StateInfo parent) {
+                this.state = state;
+                this.parentStateInfo = parent;
+            }
 
             /**
              * Convert StateInfo to string
@@ -1176,7 +1185,7 @@ public class StateMachine {
             }
             StateInfo stateInfo = mStateInfo.get(state);
             if (stateInfo == null) {
-                stateInfo = new StateInfo();
+                stateInfo = new StateInfo(state, parentStateInfo);
                 mStateInfo.put(state, stateInfo);
             }
 
@@ -1185,9 +1194,6 @@ public class StateMachine {
                     && (stateInfo.parentStateInfo != parentStateInfo)) {
                 throw new RuntimeException("state already added");
             }
-            stateInfo.state = state;
-            stateInfo.parentStateInfo = parentStateInfo;
-            stateInfo.active = false;
             if (mDbg) mSm.log("addStateInternal: X stateInfo: " + stateInfo);
             return stateInfo;
         }
