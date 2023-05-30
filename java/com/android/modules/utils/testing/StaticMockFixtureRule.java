@@ -45,12 +45,13 @@ import java.util.function.Supplier;
  * public final StaticMockFixtureRule mStaticMockFixtureRule =
  *     new StaticMockFixtureRule(mStaticMockFixtures);
  * </pre>
+ *
+ * @deprecated use {@link ExtendedMockitoRule} instead.
  */
+@Deprecated
 public class StaticMockFixtureRule implements TestRule {
 
     private static final String TAG = StaticMockFixtureRule.class.getSimpleName();
-
-    private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
 
     private StaticMockitoSession mMockitoSession;
     private StaticMockFixture[] mStaticMockFixtures;
@@ -95,9 +96,7 @@ public class StaticMockFixtureRule implements TestRule {
             sessionBuilder = mStaticMockFixtures[i].setUpMockedClasses(sessionBuilder);
         }
 
-        if (DEBUG) {
-            Log.d(TAG, "Start mocking on " + description);
-        }
+        Log.d(TAG, "Start mocking on " + description);
         mMockitoSession = sessionBuilder.startMocking();
 
         for (int i = 0; i < mStaticMockFixtures.length; i++) {
@@ -133,9 +132,7 @@ public class StaticMockFixtureRule implements TestRule {
     }
 
     private void tearDown(Description description, Throwable e) {
-        if (DEBUG) {
-            Log.d(TAG, "Finishing mocking on " + description + " (e=" + e + ")");
-        }
+      Log.d(TAG, "Finishing mocking on " + description + " (e=" + e + ")");
         mMockitoSession.finishMocking(e);
 
         for (int i = mStaticMockFixtures.length - 1; i >= 0; i--) {
