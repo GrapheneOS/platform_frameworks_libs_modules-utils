@@ -116,7 +116,7 @@ public class StateMachineTest extends TestCase {
         stateMachine.setInitialState(exampleState);
         stateMachine.start();
         assertTrue(stateMachine.toString().contains("TestStateMachine"));
-        assertTrue(stateMachine.toString().contains("(null)"));
+        assertTrue(stateMachine.toString().contains("null"));
     }
 
     @SmallTest
