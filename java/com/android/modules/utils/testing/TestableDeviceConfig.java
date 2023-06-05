@@ -33,6 +33,7 @@ import android.util.ArrayMap;
 import android.util.Pair;
 
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
+import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
 
 import org.junit.rules.TestRule;
 import org.mockito.ArgumentMatchers;
@@ -271,12 +272,47 @@ public final class TestableDeviceConfig implements StaticMockFixture {
      * <pre class="prettyprint">
      * &#064;Rule
      * public final TestableDeviceConfigRule mTestableDeviceConfigRule =
-     *     new TestableDeviceConfigRule();
+     *     new TestableDeviceConfigRule(this);
      * </pre>
      */
-    public static class TestableDeviceConfigRule extends StaticMockFixtureRule {
+    public static final class TestableDeviceConfigRule extends
+            AbstractExtendedMockitoRule<TestableDeviceConfigRule, TestableDeviceConfigRuleBuilder> {
+
+        /**
+         * Creates the rule, initializing the mocks for the given test.
+         */
+        public TestableDeviceConfigRule(Object testClassInstance) {
+            this(new TestableDeviceConfigRuleBuilder(testClassInstance)
+                    .addStaticMockFixtures(TestableDeviceConfig::new));
+        }
+
+        /**
+         * Creates the rule, without initializing the mocks.
+         */
         public TestableDeviceConfigRule() {
-            super(TestableDeviceConfig::new);
+            this(new TestableDeviceConfigRuleBuilder()
+                    .addStaticMockFixtures(TestableDeviceConfig::new));
+        }
+
+        private TestableDeviceConfigRule(TestableDeviceConfigRuleBuilder builder) {
+            super(builder);
+        }
+    }
+
+    private static final class TestableDeviceConfigRuleBuilder extends
+            AbstractBuilder<TestableDeviceConfigRule, TestableDeviceConfigRuleBuilder> {
+
+        TestableDeviceConfigRuleBuilder(Object testClassInstance) {
+            super(testClassInstance);
+        }
+
+        TestableDeviceConfigRuleBuilder() {
+            super();
+        }
+
+        @Override
+        public TestableDeviceConfigRule build() {
+            return new TestableDeviceConfigRule(this);
         }
     }
 }
