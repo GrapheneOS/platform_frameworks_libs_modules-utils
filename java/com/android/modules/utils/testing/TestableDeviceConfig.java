@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.spy;
 
 import android.provider.DeviceConfig;
 import android.provider.DeviceConfig.Properties;
@@ -188,7 +189,11 @@ public final class TestableDeviceConfig implements StaticMockFixture {
     }
 
     private Properties getProperties(String namespace, Map<String, String> keyValues) {
-        Properties properties = Mockito.mock(Properties.class);
+        Properties.Builder builder = new Properties.Builder(namespace);
+        keyValues.forEach((k, v) -> {
+            builder.setString(k, v);
+        });
+        Properties properties = spy(builder.build());
         when(properties.getNamespace()).thenReturn(namespace);
         when(properties.getKeyset()).thenReturn(keyValues.keySet());
         when(properties.getBoolean(anyString(), anyBoolean())).thenAnswer(
