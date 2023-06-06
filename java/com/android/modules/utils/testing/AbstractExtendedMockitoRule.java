@@ -205,7 +205,7 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
     /**
      * Builder for the rule.
      */
-    protected static abstract class AbstractBuilder<R extends
+    public static abstract class AbstractBuilder<R extends
             AbstractExtendedMockitoRule<R, B>, B extends AbstractBuilder<R, B>> {
         final Object mTestClassInstance;
         final List<Class<?>> mMockedStaticClasses = new ArrayList<>();
