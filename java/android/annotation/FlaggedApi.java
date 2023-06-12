@@ -15,11 +15,8 @@
  */
 package android.annotation;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
-import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 
 import java.lang.annotation.Retention;
@@ -27,13 +24,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates an API can be made hidden or public based on decisions in build time.
+ * Indicates an API is part of a feature that is guarded by an aconfig flag.
  * </p>
- * This annotation should only appear on API that are already public and not marked
- * <pre>@hide</pre>.
+ * This annotation should only appear on APIs that are marked <pre>@hide</pre>.
  *
  * @hide
  */
-@Target({TYPE, FIELD, METHOD, CONSTRUCTOR, ANNOTATION_TYPE, PACKAGE})
+@Target({TYPE, METHOD, CONSTRUCTOR})
 @Retention(RetentionPolicy.SOURCE)
-public @interface FlaggedApi {}
+public @interface FlaggedApi {
+    /**
+     * Namespace and name of aconfig flag used to guard the feature this API is part of. Expected
+     * syntax: namespace/name, e.g. "the_namespace/the_name_of_the_flag".
+     */
+    String flag() default "";
+}
