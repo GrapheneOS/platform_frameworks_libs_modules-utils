@@ -61,6 +61,21 @@ java_library {
     ],
 }
 
+java_library {
+    name: "aconfig-annotations-lib",
+    srcs: [
+        "com/android/aconfig/annotations/*.java",
+    ],
+    sdk_version: "current",
+    host_supported: true,
+    optimize: {
+        proguard_flags_files: ["aconfig_proguard.flags"],
+    },
+    visibility: [
+        "//visibility:private",
+    ],
+}
+
 filegroup {
     name: "framework-api-annotations",
     srcs: [
