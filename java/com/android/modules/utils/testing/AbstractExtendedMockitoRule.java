@@ -22,7 +22,6 @@ import android.util.Log;
 
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.util.Preconditions;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
 
 import org.junit.AssumptionViolatedException;
@@ -301,10 +300,8 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
         @Deprecated
         public final B configureSessionBuilder(
                 SessionBuilderVisitor sessionBuilderConfigurator) {
-            Preconditions.checkState(mMockedStaticClasses.isEmpty(),
-                    "mockStatic() already called");
-            Preconditions.checkState(mSpiedStaticClasses.isEmpty(),
-                    "spyStatic() already called");
+            checkState(mMockedStaticClasses.isEmpty(), "mockStatic() already called");
+            checkState(mSpiedStaticClasses.isEmpty(), "spyStatic() already called");
             mSessionBuilderConfigurator = Objects.requireNonNull(sessionBuilderConfigurator);
             return thisBuilder();
         }
@@ -355,16 +352,14 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
         }
 
         private void checkConfigureSessionBuilderNotCalled() {
-            Preconditions.checkState(mSessionBuilderConfigurator == null,
+            checkState(mSessionBuilderConfigurator == null,
                     "configureSessionBuilder() already called");
         }
 
         private Class<?> checkClassNotMockedOrSpied(Class<?> clazz) {
             Objects.requireNonNull(clazz);
-            Preconditions.checkState(!mMockedStaticClasses.contains(clazz),
-                    "class %s already mocked", clazz);
-            Preconditions.checkState(!mSpiedStaticClasses.contains(clazz),
-                    "class %s already spied", clazz);
+            checkState(!mMockedStaticClasses.contains(clazz), "class %s already mocked", clazz);
+            checkState(!mSpiedStaticClasses.contains(clazz), "class %s already spied", clazz);
             return clazz;
         }
     }
@@ -378,5 +373,13 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
          * Visits it.
          */
         void visit(StaticMockitoSessionBuilder builder);
+    }
+
+    // Copied from com.android.internal.util.Preconditions, as that method is not available on RVC
+    private static void checkState(boolean expression, String messageTemplate,
+            Object... messageArgs) {
+        if (!expression) {
+            throw new IllegalStateException(String.format(messageTemplate, messageArgs));
+        }
     }
 }
