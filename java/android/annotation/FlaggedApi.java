@@ -37,5 +37,5 @@ public @interface FlaggedApi {
      * Namespace and name of aconfig flag used to guard the feature this API is part of. Expected
      * syntax: namespace/name, e.g. "the_namespace/the_name_of_the_flag".
      */
-    String flag() default "";
+    String value();
 }
