@@ -16,6 +16,29 @@
     },
     {
       "name": "ModulesUtilsTests"
+    },
+    {
+      // b/255344517: The binary XML tests currently lives in frameworks/base.
+      "name": "FrameworksCoreTests",
+      "options": [
+        {
+          "include-filter": "com.android.internal.util.FastDataTest"
+        }
+      ],
+      "file_patterns": ["FastData"]
+    },
+    {
+      // b/255344517: The binary XML tests currently lives in frameworks/base.
+      "name": "FrameworksCoreTests",
+      "options": [
+        {
+          "include-filter": "android.util.XmlTest"
+        },
+        {
+          "include-filter": "android.util.BinaryXmlTest"
+        }
+      ],
+      "file_patterns": ["Xml"]
     }
     // TODO: Re-enable when this is stable.
     // {
@@ -26,19 +49,7 @@
   "presubmit-large": [
     {
       // Unit tests for service-wifi.jar
-      "name": "FrameworksWifiTests",
-      // TODO(b/275744125): should remove this when we find a better way to avoid test failure.
-      "options": [
-        {
-          "exclude-filter": "com.android.server.wifi.WakeupControllerTest"
-        },
-        {
-          "exclude-filter": "com.android.server.wifi.WifiNetworkSelectorTest"
-        },
-        {
-          "exclude-filter": "com.android.server.wifi.scanner.WifiScanningServiceTest"
-        }
-      ]
+      "name": "FrameworksWifiTests"
     }
   ],
   // Run these on real devices in postsubmit while they're
