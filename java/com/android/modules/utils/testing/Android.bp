@@ -42,9 +42,11 @@ java_library {
     static_libs: [
         "androidx.test.rules",
         "mockito-target-extended-minus-junit4",
+        "modules-utils-build",
         "modules-utils-preconditions",
     ],
     libs: [
+        "framework-configinfrastructure",
         "framework-annotations-lib",
     ],
     sdk_version: "module_current",
