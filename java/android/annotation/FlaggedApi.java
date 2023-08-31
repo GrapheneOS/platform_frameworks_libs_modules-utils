@@ -55,8 +55,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 public @interface FlaggedApi {
     /**
-     * Namespace and name of aconfig flag used to guard the feature this API is part of. Expected
-     * syntax: namespace/name, e.g. "the_namespace/the_name_of_the_flag".
+     * The aconfig flag used to guard the feature this API is part of. Use the aconfig
+     * auto-generated constant to refer to the flag, e.g. @FlaggedApi(Flags.FLAG_FOOBAR).
      */
     String value();
 }
