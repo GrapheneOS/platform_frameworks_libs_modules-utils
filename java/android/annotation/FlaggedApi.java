@@ -15,7 +15,9 @@
  */
 package android.annotation;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.CONSTRUCTOR;
+import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 
@@ -24,18 +26,37 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates an API is part of a feature that is guarded by an aconfig flag.
- * </p>
- * This annotation should only appear on APIs that are marked <pre>@hide</pre>.
+ * Indicates an API is part of a feature that is guarded by an aconfig flag, and only available if
+ * the flag is enabled.
+ * <p>
+ * Unless the API has been finalized and has become part of the SDK, callers of the annotated API
+ * must check that the flag is enabled before making any assumptions about the existence of the API.
+ * <p>
+ * Example:
+ * <code><pre>
+ *     import com.example.foobar.Flags;
  *
+ *     &#64;FlaggedApi(Flags.FLAG_FOOBAR)
+ *     public void foobar() { ... }
+ * </pre></code>
+ * Usage example:
+ * <code><pre>
+ *     public void codeThatUsesFoobarApi() {
+ *         if (Flags.foobar()) {
+ *             foobar();
+ *         } else {
+ *             // gracefully handle absence of the foobar API.
+ *         }
+ *     }
+ * </pre></code>
  * @hide
  */
-@Target({TYPE, METHOD, CONSTRUCTOR})
+@Target({TYPE, METHOD, CONSTRUCTOR, FIELD, ANNOTATION_TYPE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface FlaggedApi {
     /**
-     * Namespace and name of aconfig flag used to guard the feature this API is part of. Expected
-     * syntax: namespace/name, e.g. "the_namespace/the_name_of_the_flag".
+     * The aconfig flag used to guard the feature this API is part of. Use the aconfig
+     * auto-generated constant to refer to the flag, e.g. @FlaggedApi(Flags.FLAG_FOOBAR).
      */
     String value();
 }
