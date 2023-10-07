@@ -34,7 +34,7 @@ android_test {
         "androidx.test.runner",
         "androidx.test.rules",
         "platform-test-annotations",
-        "truth-prebuilt",
+        "truth",
     ],
 
     libs: [
