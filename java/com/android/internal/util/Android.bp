@@ -38,3 +38,14 @@ java_library {
         "unsupportedappusage",
     ],
 }
+
+java_library {
+    name: "modules-utils-fastxmlserializer",
+    srcs: [
+        "FastXmlSerializer.java",
+    ],
+    defaults: ["modules-utils-defaults"],
+    libs: [
+        "unsupportedappusage",
+    ],
+}
