@@ -18,6 +18,7 @@ package com.android.internal.util;
 
 import android.annotation.IntRange;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.os.Build;
 import android.text.TextUtils;
@@ -767,5 +768,18 @@ public class Preconditions {
         }
 
         return value;
+    }
+
+    /**
+     * Throws an exception that guides developers to configure a {@code RavenwoodRule} when the
+     * given argument is {@code null}.
+     */
+    public static <T> @NonNull T requireNonNullViaRavenwoodRule(@Nullable T t) {
+        if (t == null) {
+            throw new IllegalStateException("This operation requires that a RavenwoodRule be "
+                    + "configured to accurately define the expected test environment");
+        } else {
+            return t;
+        }
     }
 }
