@@ -23,6 +23,10 @@ import android.util.Log;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStaticClass;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStaticClasses;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStaticClass;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStaticClasses;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -32,11 +36,21 @@ import org.mockito.MockitoFramework;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -49,12 +63,19 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
 
     private static final String TAG = AbstractExtendedMockitoRule.class.getSimpleName();
 
+    private static final AnnotationFetcher<SpyStaticClass, SpyStaticClasses>
+        sSpyStaticAnnotationFetcher = new AnnotationFetcher<>(SpyStaticClass.class,
+                SpyStaticClasses.class, r -> r.value());
+    private static final AnnotationFetcher<MockStaticClass, MockStaticClasses>
+        sMockStaticAnnotationFetcher = new AnnotationFetcher<>(MockStaticClass.class,
+                MockStaticClasses.class, r -> r.value());
+
     private final Object mTestClassInstance;
     private final Strictness mStrictness;
     private @Nullable final MockitoFramework mMockitoFramework;
     private @Nullable final Runnable mAfterSessionFinishedCallback;
-    private final List<Class<?>> mMockedStaticClasses;
-    private final List<Class<?>> mSpiedStaticClasses;
+    private final Set<Class<?>> mMockedStaticClasses;
+    private final Set<Class<?>> mSpiedStaticClasses;
     private final List<StaticMockFixture> mStaticMockFixtures;
     private final @Nullable SessionBuilderVisitor mSessionBuilderConfigurator;
     private final boolean mClearInlineMocks;
@@ -84,12 +105,43 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
                 + ", clearInlineMocks=" + mClearInlineMocks);
     }
 
+    /**
+     * Gets the mocked static classes present in the given test.
+     *
+     * <p>By default, it returns the classes defined by {@link AbstractBuilder#mockStatic(Class)}
+     * plus the classes present in the {@link MockStaticClass} and {@link MockStaticClasses}
+     * annotations (presents in the test method, its class, or its superclasses).
+     */
+    protected Set<Class<?>> getMockedStaticClasses(Description description) {
+        Set<Class<?>> staticClasses = new HashSet<>(mMockedStaticClasses);
+        sMockStaticAnnotationFetcher.getAnnotations(description)
+                .forEach(a -> staticClasses.add(a.value()));
+        return Collections.unmodifiableSet(staticClasses);
+    }
+
+    /**
+     * Gets the spied static classes present in the given test.
+     *
+     * <p>By default, it returns the classes defined by {@link AbstractBuilder#spyStatic(Class)}
+     * plus the classes present in the {@link SpyStaticClass} and {@link SpyStaticClasses}
+     * annotations (presents in the test method, its class, or its superclasses).
+     */
+    protected Set<Class<?>> getSpiedStaticClasses(Description description) {
+        Set<Class<?>> staticClasses = new HashSet<>(mSpiedStaticClasses);
+        sSpyStaticAnnotationFetcher.getAnnotations(description)
+                .forEach(a -> staticClasses.add(a.value()));
+        return Collections.unmodifiableSet(staticClasses);
+    }
+
+
+
+
     @Override
     public Statement apply(Statement base, Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                createMockitoSession(description);
+                createMockitoSession(base, description);
                 Throwable error = null;
                 try {
                     // TODO(b/296937563): need to add unit tests that make sure the session is
@@ -117,14 +169,14 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
         };
     }
 
-    private void createMockitoSession(Description description) {
+    private void createMockitoSession(Statement base, Description description) {
         // TODO(b/296937563): might be prudent to save the session statically so it's explicitly
         // closed in case it fails to be created again if for some reason it was not closed by us
         // (although that should not happen)
         Log.v(TAG, "Creating session builder with strictness " + mStrictness);
         StaticMockitoSessionBuilder mSessionBuilder = mockitoSession().strictness(mStrictness);
 
-        setUpMockedClasses(mSessionBuilder);
+        setUpMockedClasses(description, mSessionBuilder);
 
         if (mTestClassInstance != null) {
             Log.v(TAG, "Initializing mocks on " + description + " using " + mSessionBuilder);
@@ -143,18 +195,19 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
         setUpMockBehaviors();
     }
 
-    private void setUpMockedClasses(StaticMockitoSessionBuilder sessionBuilder) {
+    private void setUpMockedClasses(Description description,
+            StaticMockitoSessionBuilder sessionBuilder) {
         if (!mStaticMockFixtures.isEmpty()) {
             for (StaticMockFixture fixture : mStaticMockFixtures) {
                 Log.v(TAG, "Calling setUpMockedClasses(" + sessionBuilder + ") on " + fixture);
                 fixture.setUpMockedClasses(sessionBuilder);
             }
         }
-        for (Class<?> clazz: mMockedStaticClasses) {
+        for (Class<?> clazz: getMockedStaticClasses(description)) {
             Log.v(TAG, "Calling mockStatic() on " + clazz);
             sessionBuilder.mockStatic(clazz);
         }
-        for (Class<?> clazz: mSpiedStaticClasses) {
+        for (Class<?> clazz: getSpiedStaticClasses(description)) {
             Log.v(TAG, "Calling spyStatic() on " + clazz);
             sessionBuilder.spyStatic(clazz);
         }
@@ -219,8 +272,8 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
     public static abstract class AbstractBuilder<R extends
             AbstractExtendedMockitoRule<R, B>, B extends AbstractBuilder<R, B>> {
         final Object mTestClassInstance;
-        final List<Class<?>> mMockedStaticClasses = new ArrayList<>();
-        final List<Class<?>> mSpiedStaticClasses = new ArrayList<>();
+        final Set<Class<?>> mMockedStaticClasses = new HashSet<>();
+        final Set<Class<?>> mSpiedStaticClasses = new HashSet<>();
         @Nullable List<StaticMockFixture> mStaticMockFixtures;
         Strictness mStrictness = Strictness.LENIENT;
         @Nullable MockitoFramework mMockitoFramework;
@@ -392,6 +445,65 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
             Object... messageArgs) {
         if (!expression) {
             throw new IllegalStateException(String.format(messageTemplate, messageArgs));
+        }
+    }
+
+    // TODO: make it public so it can be used by other modules
+    private static final class AnnotationFetcher<A extends Annotation, R extends Annotation> {
+
+        private final Class<A> mAnnotationType;
+        private final Class<R> mRepeatableType;
+        private final Function<R, A[]> mConverter;
+
+        AnnotationFetcher(Class<A> annotationType, Class<R> repeatableType,
+                Function<R, A[]> converter) {
+            mAnnotationType = annotationType;
+            mRepeatableType = repeatableType;
+            mConverter = converter;
+        }
+
+        private void add(Set<A> allAnnotations, R repeatableAnnotation) {
+            A[] repeatedAnnotations = mConverter.apply(repeatableAnnotation);
+            for (A repeatedAnnotation : repeatedAnnotations) {
+                allAnnotations.add(repeatedAnnotation);
+            }
+        }
+
+        Set<A> getAnnotations(Description description) {
+            Set<A> allAnnotations = new HashSet<>();
+
+            // Gets the annotations from the method first
+            Collection<Annotation> annotations = description.getAnnotations();
+            if (annotations != null) {
+                for (Annotation annotation : annotations) {
+                    if (mAnnotationType.isInstance(annotation)) {
+                        allAnnotations.add(mAnnotationType.cast(annotation));
+                    }
+                    if (mRepeatableType.isInstance(annotation)) {
+                        add(allAnnotations, mRepeatableType.cast(annotation));
+                    }
+                }
+            }
+
+            // Then superclasses
+            Class<?> clazz = description.getTestClass();
+            do {
+                A[] repeatedAnnotations = clazz.getAnnotationsByType(mAnnotationType);
+                if (repeatedAnnotations != null) {
+                    for (A repeatedAnnotation : repeatedAnnotations) {
+                        allAnnotations.add(repeatedAnnotation);
+                    }
+                }
+                R[] repeatableAnnotations = clazz.getAnnotationsByType(mRepeatableType);
+                if (repeatableAnnotations != null) {
+                    for (R repeatableAnnotation : repeatableAnnotations) {
+                        add(allAnnotations, mRepeatableType.cast(repeatableAnnotation));
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            } while (clazz != null);
+
+            return allAnnotations;
         }
     }
 }

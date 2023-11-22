@@ -31,6 +31,9 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStaticClass;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStaticClass;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -46,20 +49,28 @@ import org.mockito.listeners.MockitoListener;
 import org.mockito.plugins.MockitoPlugins;
 import org.mockito.quality.Strictness;
 
+import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 @RunWith(MockitoJUnitRunner.class)
 public final class ExtendedMockitoRuleTest {
+
     public static final String TAG = ExtendedMockitoRuleTest.class.getSimpleName();
 
+    // Not a real test (i.e., it doesn't exist on this class), but it's passed to Description
+    private static final String TEST_METHOD_BEING_EXECUTED = "testAmI..OrNot";
+
     private @Mock Statement mStatement;
-    private @Mock Description mDescription;
     private @Mock Runnable mRunnable;
     private @Mock ExtendedMockitoRule.SessionBuilderVisitor mSessionBuilderVisitor;
     private @Mock StaticMockFixture mStaticMockFixture1;
     private @Mock StaticMockFixture mStaticMockFixture2;
     private @Mock StaticMockFixture mStaticMockFixture3;
 
+    private final Description mDescription = newTestMethod();
     private final ClassUnderTest mClassUnderTest = new ClassUnderTest();
     private final ExtendedMockitoRule.Builder mBuilder =
             new ExtendedMockitoRule.Builder(mClassUnderTest);
@@ -164,7 +175,8 @@ public final class ExtendedMockitoRuleTest {
 
     @Test
     public void testMocksStatic() throws Throwable {
-        mBuilder.mockStatic(StaticClass.class).build().apply(new Statement() {
+        ExtendedMockitoRule rule = mBuilder.mockStatic(StaticClass.class).build();
+        rule.apply(new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 doReturn("mocko()").when(() -> StaticClass.marco());
@@ -175,6 +187,12 @@ public final class ExtendedMockitoRuleTest {
                         .that(StaticClass.water()).isNull(); // not mocked
             }
         }, mDescription).evaluate();
+
+        Set<Class<?>> mockedClasses = rule.getMockedStaticClasses(mDescription);
+        assertWithMessage("rule.getMockedStaticClasses()").that(mockedClasses)
+                .containsExactly(StaticClass.class);
+        assertThrows(RuntimeException.class,
+                () -> mockedClasses.add(ExtendedMockitoRuleTest.class));
     }
 
     @Test
@@ -186,29 +204,79 @@ public final class ExtendedMockitoRuleTest {
 
     @Test
     public void testMocksStatic_multipleClasses() throws Throwable {
-        mBuilder.mockStatic(StaticClass.class).mockStatic(AnotherStaticClass.class).build().apply(
-                new Statement() {
-                    @Override
-                    public void evaluate() throws Throwable {
-                        doReturn("mocko()").when(() -> StaticClass.marco());
-                        doReturn("MOCKO()").when(() -> AnotherStaticClass.marco());
+        ExtendedMockitoRule rule = mBuilder.mockStatic(StaticClass.class)
+                .mockStatic(AnotherStaticClass.class).build();
+        rule.apply(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                doReturn("mocko()").when(() -> StaticClass.marco());
+                doReturn("MOCKO()").when(() -> AnotherStaticClass.marco());
 
-                        assertWithMessage("StaticClass.marco()")
-                                .that(StaticClass.marco()).isEqualTo("mocko()");
-                        assertWithMessage("StaticClass.water()")
-                                .that(StaticClass.water()).isNull(); // not mocked
+                assertWithMessage("StaticClass.marco()")
+                        .that(StaticClass.marco()).isEqualTo("mocko()");
+                assertWithMessage("StaticClass.water()")
+                        .that(StaticClass.water()).isNull(); // not mocked
 
-                        assertWithMessage("AnotherStaticClass.marco()")
-                                .that(AnotherStaticClass.marco()).isEqualTo("MOCKO()");
-                        assertWithMessage("AnotherStaticClass.water()")
-                                .that(AnotherStaticClass.water()).isNull(); // not mocked
-                    }
-                }, mDescription).evaluate();
+                assertWithMessage("AnotherStaticClass.marco()")
+                        .that(AnotherStaticClass.marco()).isEqualTo("MOCKO()");
+                assertWithMessage("AnotherStaticClass.water()")
+                        .that(AnotherStaticClass.water()).isNull(); // not mocked
+            }
+        }, mDescription).evaluate();
+
+        Set<Class<?>> mockedClasses = rule.getMockedStaticClasses(mDescription);
+        assertWithMessage("rule.getMockedStaticClasses()").that(mockedClasses)
+                .containsExactly(StaticClass.class, AnotherStaticClass.class);
+        assertThrows(RuntimeException.class,
+                () -> mockedClasses.add(ExtendedMockitoRuleTest.class));
+    }
+
+    @Test
+    public void testMockStatic_ruleAndAnnotation() throws Throwable {
+        ExtendedMockitoRule rule = mBuilder.mockStatic(StaticClass.class).build();
+
+        rule.apply(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                doReturn("mocko()").when(() -> StaticClass.marco());
+                doReturn("MOCKO()").when(() -> AnotherStaticClass.marco());
+
+                assertWithMessage("StaticClass.marco()")
+                        .that(StaticClass.marco()).isEqualTo("mocko()");
+                assertWithMessage("StaticClass.water()")
+                        .that(StaticClass.water()).isNull(); // not mocked
+
+                assertWithMessage("AnotherStaticClass.marco()")
+                        .that(AnotherStaticClass.marco()).isEqualTo("MOCKO()");
+                assertWithMessage("AnotherStaticClass.water()")
+                        .that(AnotherStaticClass.water()).isNull(); // not mocked
+            }
+        }, newTestMethod(new MockStaticClassAnnotation(AnotherStaticClass.class))).evaluate();
+    }
+
+    // Ideally, we should test the annotations indirectly (i.e., by asserting their static classes
+    // are properly mocked, but pragmatically speaking, testing the getSpiedStatic() is enough - and
+    // much simpler
+    @Test
+    public void testMockStatic_fromEverywhere() throws Throwable {
+        ExtendedMockitoRule rule = mBuilder.mockStatic(StaticClass.class).build();
+
+        Set<Class<?>> mockedClasses = rule.getMockedStaticClasses(newTestMethod(SubClass.class,
+                new MockStaticClassAnnotation(AnotherStaticClass.class)));
+
+        assertWithMessage("rule.getMockedStaticClasses()").that(mockedClasses).containsExactly(
+                StaticClass.class, AnotherStaticClass.class, StaticClassMockedBySuperClass.class,
+                AnotherStaticClassMockedBySuperClass.class, StaticClassMockedBySubClass.class,
+                AnotherStaticClassMockedBySubClass.class);
+        assertThrows(RuntimeException.class,
+                () -> mockedClasses.add(ExtendedMockitoRuleTest.class));
     }
 
     @Test
     public void testSpyStatic() throws Throwable {
-        mBuilder.spyStatic(StaticClass.class).build().apply(new Statement() {
+        ExtendedMockitoRule rule = mBuilder.spyStatic(StaticClass.class).build();
+
+        rule.apply(new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 doReturn("mocko()").when(() -> StaticClass.marco());
@@ -219,6 +287,11 @@ public final class ExtendedMockitoRuleTest {
                         .that(StaticClass.water()).isEqualTo("polo");
             }
         }, mDescription).evaluate();
+
+        Set<Class<?>> spiedClasses = rule.getSpiedStaticClasses(mDescription);
+        assertWithMessage("rule.getSpiedStaticClasses()").that(spiedClasses)
+                .containsExactly(StaticClass.class);
+        assertThrows(RuntimeException.class, () -> spiedClasses.add(ExtendedMockitoRuleTest.class));
     }
 
     @Test
@@ -230,8 +303,10 @@ public final class ExtendedMockitoRuleTest {
 
     @Test
     public void testSpyStatic_multipleClasses() throws Throwable {
-        mBuilder.spyStatic(StaticClass.class).spyStatic(AnotherStaticClass.class).build()
-                .apply(new Statement() {
+        ExtendedMockitoRule rule = mBuilder.spyStatic(StaticClass.class)
+                .spyStatic(AnotherStaticClass.class).build();
+
+        rule.apply(new Statement() {
                     @Override
                     public void evaluate() throws Throwable {
                         doReturn("mocko()").when(() -> StaticClass.marco());
@@ -248,12 +323,58 @@ public final class ExtendedMockitoRuleTest {
                                 .that(AnotherStaticClass.water()).isEqualTo("POLO");
                     }
                 }, mDescription).evaluate();
+
+        Set<Class<?>> spiedClasses = rule.getSpiedStaticClasses(mDescription);
+        assertWithMessage("rule.getSpiedStaticClasses()").that(spiedClasses)
+                .containsExactly(StaticClass.class, AnotherStaticClass.class);
+        assertThrows(RuntimeException.class, () -> spiedClasses.add(ExtendedMockitoRuleTest.class));
+    }
+
+    @Test
+    public void testSpyStatic_ruleAndAnnotation() throws Throwable {
+        ExtendedMockitoRule rule = mBuilder.spyStatic(StaticClass.class).build();
+        rule.apply(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                doReturn("mocko()").when(() -> StaticClass.marco());
+                doReturn("MOCKO()").when(() -> AnotherStaticClass.marco());
+
+                assertWithMessage("StaticClass.marco()")
+                        .that(StaticClass.marco()).isEqualTo("mocko()");
+                assertWithMessage("StaticClass.water()")
+                        .that(StaticClass.water()).isEqualTo("polo");
+
+                assertWithMessage("AnotherStaticClass.marco()")
+                        .that(AnotherStaticClass.marco()).isEqualTo("MOCKO()");
+                assertWithMessage("AnotherStaticClass.water()")
+                        .that(AnotherStaticClass.water()).isEqualTo("POLO");
+            }
+        }, newTestMethod(new SpyStaticClassAnnotation(AnotherStaticClass.class))).evaluate();
+    }
+
+    // Ideally, we should test the annotations indirectly (i.e., by asserting their static classes
+    // are properly spied, but pragmatically speaking, testing the getSpiedStatic() is enough - and
+    // much simpler
+    @Test
+    public void testSpyStatic_fromEverywhere() throws Throwable {
+        ExtendedMockitoRule rule = mBuilder.spyStatic(StaticClass.class).build();
+
+        Set<Class<?>> spiedClasses = rule.getSpiedStaticClasses(newTestMethod(SubClass.class,
+                new SpyStaticClassAnnotation(AnotherStaticClass.class)));
+
+        assertWithMessage("rule.getSpiedStaticClasses()").that(spiedClasses).containsExactly(
+                StaticClass.class, AnotherStaticClass.class, StaticClassSpiedBySuperClass.class,
+                AnotherStaticClassSpiedBySuperClass.class, StaticClassSpiedBySubClass.class,
+                AnotherStaticClassSpiedBySubClass.class);
+        assertThrows(RuntimeException.class, () -> spiedClasses.add(ExtendedMockitoRuleTest.class));
     }
 
     @Test
     public void testMockAndSpyStatic() throws Throwable {
-        mBuilder.mockStatic(StaticClass.class).spyStatic(AnotherStaticClass.class).build()
-                .apply(new Statement() {
+        ExtendedMockitoRule rule = mBuilder.mockStatic(StaticClass.class)
+                .spyStatic(AnotherStaticClass.class).build();
+
+        rule.apply(new Statement() {
                     @Override
                     public void evaluate() throws Throwable {
                         doReturn("mocko()").when(() -> StaticClass.marco());
@@ -270,6 +391,18 @@ public final class ExtendedMockitoRuleTest {
                                 .that(AnotherStaticClass.water()).isEqualTo("POLO");
                     }
                 }, mDescription).evaluate();
+
+        Set<Class<?>> spiedStaticClasses = rule.getSpiedStaticClasses(mDescription);
+        assertWithMessage("rule.getSpiedStaticClasses()").that(spiedStaticClasses)
+                .containsExactly(AnotherStaticClass.class);
+        assertThrows(RuntimeException.class,
+                () -> spiedStaticClasses.add(ExtendedMockitoRuleTest.class));
+
+        Set<Class<?>> mockedStaticClasses = rule.getMockedStaticClasses(mDescription);
+        assertWithMessage("rule.getMockedStaticClasses()").that(mockedStaticClasses)
+                .containsExactly(StaticClass.class);
+        assertThrows(RuntimeException.class,
+                () -> mockedStaticClasses.add(ExtendedMockitoRuleTest.class));
     }
 
     @Test
@@ -520,6 +653,15 @@ public final class ExtendedMockitoRuleTest {
         }, mDescription).evaluate();
     }
 
+    private static Description newTestMethod(Annotation... annotations) {
+        return newTestMethod(ClassUnderTest.class, annotations);
+    }
+
+    private static Description newTestMethod(Class<?> testClass, Annotation... annotations) {
+        return Description.createTestDescription(testClass, TEST_METHOD_BEING_EXECUTED,
+                annotations);
+    }
+
     private static final class ClassUnderTest {
         @Mock
         public DumbObject mMock;
@@ -621,5 +763,105 @@ public final class ExtendedMockitoRuleTest {
         public void finishMocking(Throwable failure) {
             throw e;
         }
+    }
+
+    private abstract static class ClassAnnotation<A extends Annotation> implements Annotation {
+        private Class<A> mAnnotationType;
+        private Class<?> mClass;
+
+        private ClassAnnotation(Class<A> annotationType, Class<?> clazz) {
+            mAnnotationType = annotationType;
+            mClass = clazz;
+        }
+
+        @Override
+        public final Class<A> annotationType() {
+            return mAnnotationType;
+        }
+
+        public final Class<?> value() {
+            return mClass;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(mAnnotationType, mClass);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            ClassAnnotation other = (ClassAnnotation) obj;
+            return Objects.equals(mAnnotationType, other.mAnnotationType)
+                    && Objects.equals(mClass, other.mClass);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "[" + mClass.getSimpleName() + "]";
+        }
+
+    }
+
+    private static final class SpyStaticClassAnnotation extends ClassAnnotation<SpyStaticClass>
+            implements SpyStaticClass {
+
+        private SpyStaticClassAnnotation(Class<?> clazz) {
+            super(SpyStaticClass.class, clazz);
+        }
+    }
+
+    private static final class MockStaticClassAnnotation extends ClassAnnotation<MockStaticClass>
+            implements MockStaticClass {
+
+        private MockStaticClassAnnotation(Class<?> clazz) {
+            super(MockStaticClass.class, clazz);
+        }
+    }
+
+    private static final class StaticClassMockedBySuperClass {
+    }
+
+    private static final class AnotherStaticClassMockedBySuperClass {
+    }
+    private static final class StaticClassSpiedBySuperClass {
+    }
+
+    private static final class AnotherStaticClassSpiedBySuperClass {
+    }
+
+    @SpyStaticClass(StaticClassSpiedBySuperClass.class)
+    @SpyStaticClass(AnotherStaticClassSpiedBySuperClass.class)
+    @MockStaticClass(StaticClassMockedBySuperClass.class)
+    @MockStaticClass(AnotherStaticClassMockedBySuperClass.class)
+    private static class SuperClass {
+
+    }
+
+    private static final class StaticClassMockedBySubClass {
+    }
+
+    private static final class AnotherStaticClassMockedBySubClass {
+    }
+
+    private static final class StaticClassSpiedBySubClass {
+    }
+
+    private static final class AnotherStaticClassSpiedBySubClass {
+    }
+
+    @SpyStaticClass(StaticClassSpiedBySubClass.class)
+    @SpyStaticClass(AnotherStaticClassSpiedBySubClass.class)
+    @MockStaticClass(StaticClassMockedBySubClass.class)
+    @MockStaticClass(AnotherStaticClassMockedBySubClass.class)
+    private static final class SubClass extends SuperClass{
     }
 }
