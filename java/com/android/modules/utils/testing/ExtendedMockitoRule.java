@@ -18,6 +18,12 @@ package com.android.modules.utils.testing;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
 import com.android.modules.utils.testing.ExtendedMockitoRule.Builder;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * Rule to make it easier to use Extended Mockito:
  *
@@ -70,5 +76,31 @@ public final class ExtendedMockitoRule extends
         public ExtendedMockitoRule build() {
             return new ExtendedMockitoRule(this);
         }
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Repeatable(SpyStaticClasses.class)
+    public @interface SpyStaticClass {
+        Class<?> value();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    public @interface SpyStaticClasses {
+        SpyStaticClass[] value();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Repeatable(MockStaticClasses.class)
+    public @interface MockStaticClass {
+        Class<?> value();
+    }
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    public @interface MockStaticClasses {
+        MockStaticClass[] value();
     }
 }
