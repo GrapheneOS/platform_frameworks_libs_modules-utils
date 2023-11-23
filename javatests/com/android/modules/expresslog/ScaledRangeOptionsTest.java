@@ -27,10 +27,6 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 @SmallTest
 public class ScaledRangeOptionsTest {
-    static {
-        System.loadLibrary("expresslog_test_jni");
-    }
-
     private static final String TAG = ScaledRangeOptionsTest.class.getSimpleName();
 
     @Test
