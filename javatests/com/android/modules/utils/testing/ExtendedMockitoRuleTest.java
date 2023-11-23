@@ -31,8 +31,8 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStaticClass;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStaticClass;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
 import org.junit.runner.Description;
@@ -251,7 +251,7 @@ public final class ExtendedMockitoRuleTest {
                 assertWithMessage("AnotherStaticClass.water()")
                         .that(AnotherStaticClass.water()).isNull(); // not mocked
             }
-        }, newTestMethod(new MockStaticClassAnnotation(AnotherStaticClass.class))).evaluate();
+        }, newTestMethod(new MockStaticAnnotation(AnotherStaticClass.class))).evaluate();
     }
 
     // Ideally, we should test the annotations indirectly (i.e., by asserting their static classes
@@ -262,7 +262,7 @@ public final class ExtendedMockitoRuleTest {
         ExtendedMockitoRule rule = mBuilder.mockStatic(StaticClass.class).build();
 
         Set<Class<?>> mockedClasses = rule.getMockedStaticClasses(newTestMethod(SubClass.class,
-                new MockStaticClassAnnotation(AnotherStaticClass.class)));
+                new MockStaticAnnotation(AnotherStaticClass.class)));
 
         assertWithMessage("rule.getMockedStaticClasses()").that(mockedClasses).containsExactly(
                 StaticClass.class, AnotherStaticClass.class, StaticClassMockedBySuperClass.class,
@@ -349,7 +349,7 @@ public final class ExtendedMockitoRuleTest {
                 assertWithMessage("AnotherStaticClass.water()")
                         .that(AnotherStaticClass.water()).isEqualTo("POLO");
             }
-        }, newTestMethod(new SpyStaticClassAnnotation(AnotherStaticClass.class))).evaluate();
+        }, newTestMethod(new SpyStaticAnnotation(AnotherStaticClass.class))).evaluate();
     }
 
     // Ideally, we should test the annotations indirectly (i.e., by asserting their static classes
@@ -360,7 +360,7 @@ public final class ExtendedMockitoRuleTest {
         ExtendedMockitoRule rule = mBuilder.spyStatic(StaticClass.class).build();
 
         Set<Class<?>> spiedClasses = rule.getSpiedStaticClasses(newTestMethod(SubClass.class,
-                new SpyStaticClassAnnotation(AnotherStaticClass.class)));
+                new SpyStaticAnnotation(AnotherStaticClass.class)));
 
         assertWithMessage("rule.getSpiedStaticClasses()").that(spiedClasses).containsExactly(
                 StaticClass.class, AnotherStaticClass.class, StaticClassSpiedBySuperClass.class,
@@ -808,22 +808,21 @@ public final class ExtendedMockitoRuleTest {
         public String toString() {
             return getClass().getSimpleName() + "[" + mClass.getSimpleName() + "]";
         }
-
     }
 
-    private static final class SpyStaticClassAnnotation extends ClassAnnotation<SpyStaticClass>
-            implements SpyStaticClass {
+    private static final class SpyStaticAnnotation extends ClassAnnotation<SpyStatic>
+            implements SpyStatic {
 
-        private SpyStaticClassAnnotation(Class<?> clazz) {
-            super(SpyStaticClass.class, clazz);
+        private SpyStaticAnnotation(Class<?> clazz) {
+            super(SpyStatic.class, clazz);
         }
     }
 
-    private static final class MockStaticClassAnnotation extends ClassAnnotation<MockStaticClass>
-            implements MockStaticClass {
+    private static final class MockStaticAnnotation extends ClassAnnotation<MockStatic>
+            implements MockStatic {
 
-        private MockStaticClassAnnotation(Class<?> clazz) {
-            super(MockStaticClass.class, clazz);
+        private MockStaticAnnotation(Class<?> clazz) {
+            super(MockStatic.class, clazz);
         }
     }
 
@@ -838,10 +837,10 @@ public final class ExtendedMockitoRuleTest {
     private static final class AnotherStaticClassSpiedBySuperClass {
     }
 
-    @SpyStaticClass(StaticClassSpiedBySuperClass.class)
-    @SpyStaticClass(AnotherStaticClassSpiedBySuperClass.class)
-    @MockStaticClass(StaticClassMockedBySuperClass.class)
-    @MockStaticClass(AnotherStaticClassMockedBySuperClass.class)
+    @SpyStatic(StaticClassSpiedBySuperClass.class)
+    @SpyStatic(AnotherStaticClassSpiedBySuperClass.class)
+    @MockStatic(StaticClassMockedBySuperClass.class)
+    @MockStatic(AnotherStaticClassMockedBySuperClass.class)
     private static class SuperClass {
 
     }
@@ -858,10 +857,10 @@ public final class ExtendedMockitoRuleTest {
     private static final class AnotherStaticClassSpiedBySubClass {
     }
 
-    @SpyStaticClass(StaticClassSpiedBySubClass.class)
-    @SpyStaticClass(AnotherStaticClassSpiedBySubClass.class)
-    @MockStaticClass(StaticClassMockedBySubClass.class)
-    @MockStaticClass(AnotherStaticClassMockedBySubClass.class)
+    @SpyStatic(StaticClassSpiedBySubClass.class)
+    @SpyStatic(AnotherStaticClassSpiedBySubClass.class)
+    @MockStatic(StaticClassMockedBySubClass.class)
+    @MockStatic(AnotherStaticClassMockedBySubClass.class)
     private static final class SubClass extends SuperClass{
     }
 }
