@@ -48,13 +48,12 @@ static const JNINativeMethod gMethods[] = {
 
 namespace android {
 
-int register_com_android_modules_expresslog_Utils(JNIEnv* env) {
-    static const char* const kUtilsClassName = "com/android/modules/expresslog/Utils";
+int register_com_android_modules_expresslog_Utils(JNIEnv* env, const char* const utilsClassName) {
     static const char* const kStringClassName = "java/lang/String";
 
-    ScopedLocalRef<jclass> utilsCls(env, env->FindClass(kUtilsClassName));
+    ScopedLocalRef<jclass> utilsCls(env, env->FindClass(utilsClassName));
     if (utilsCls.get() == nullptr) {
-        ALOGE("jni expresslog registration failure, class not found '%s'", kUtilsClassName);
+        ALOGE("jni expresslog registration failure, class not found '%s'", utilsClassName);
         return JNI_ERR;
     }
 
@@ -76,6 +75,11 @@ int register_com_android_modules_expresslog_Utils(JNIEnv* env) {
         return JNI_ERR;
     }
     return JNI_VERSION_1_4;
+}
+
+int register_com_android_modules_expresslog_Utils(JNIEnv* env) {
+    static const char* const kUtilsClassName = "com/android/modules/expresslog/Utils";
+    return register_com_android_modules_expresslog_Utils(env, kUtilsClassName);
 }
 
 }  // namespace android
