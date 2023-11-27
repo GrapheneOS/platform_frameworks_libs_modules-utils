@@ -81,26 +81,26 @@ public final class ExtendedMockitoRule extends
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Repeatable(SpyStaticClasses.class)
-    public @interface SpyStaticClass {
+    public @interface SpyStatic {
         Class<?> value();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
     public @interface SpyStaticClasses {
-        SpyStaticClass[] value();
+        SpyStatic[] value();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Repeatable(MockStaticClasses.class)
-    public @interface MockStaticClass {
+    public @interface MockStatic {
         Class<?> value();
     }
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
     public @interface MockStaticClasses {
-        MockStaticClass[] value();
+        MockStatic[] value();
     }
 }
