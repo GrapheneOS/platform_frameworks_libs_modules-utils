@@ -23,9 +23,9 @@ import android.util.Log;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.testing.AbstractExtendedMockitoRule.AbstractBuilder;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStaticClass;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStaticClasses;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStaticClass;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStaticClasses;
 
 import org.junit.rules.TestRule;
@@ -63,11 +63,11 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
 
     private static final String TAG = AbstractExtendedMockitoRule.class.getSimpleName();
 
-    private static final AnnotationFetcher<SpyStaticClass, SpyStaticClasses>
-        sSpyStaticAnnotationFetcher = new AnnotationFetcher<>(SpyStaticClass.class,
+    private static final AnnotationFetcher<SpyStatic, SpyStaticClasses>
+        sSpyStaticAnnotationFetcher = new AnnotationFetcher<>(SpyStatic.class,
                 SpyStaticClasses.class, r -> r.value());
-    private static final AnnotationFetcher<MockStaticClass, MockStaticClasses>
-        sMockStaticAnnotationFetcher = new AnnotationFetcher<>(MockStaticClass.class,
+    private static final AnnotationFetcher<MockStatic, MockStaticClasses>
+        sMockStaticAnnotationFetcher = new AnnotationFetcher<>(MockStatic.class,
                 MockStaticClasses.class, r -> r.value());
 
     private final Object mTestClassInstance;
@@ -109,7 +109,7 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
      * Gets the mocked static classes present in the given test.
      *
      * <p>By default, it returns the classes defined by {@link AbstractBuilder#mockStatic(Class)}
-     * plus the classes present in the {@link MockStaticClass} and {@link MockStaticClasses}
+     * plus the classes present in the {@link MockStatic} and {@link MockStaticClasses}
      * annotations (presents in the test method, its class, or its superclasses).
      */
     protected Set<Class<?>> getMockedStaticClasses(Description description) {
@@ -123,7 +123,7 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
      * Gets the spied static classes present in the given test.
      *
      * <p>By default, it returns the classes defined by {@link AbstractBuilder#spyStatic(Class)}
-     * plus the classes present in the {@link SpyStaticClass} and {@link SpyStaticClasses}
+     * plus the classes present in the {@link SpyStatic} and {@link SpyStaticClasses}
      * annotations (presents in the test method, its class, or its superclasses).
      */
     protected Set<Class<?>> getSpiedStaticClasses(Description description) {
