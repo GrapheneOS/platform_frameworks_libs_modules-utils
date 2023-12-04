@@ -28,12 +28,16 @@ java_library {
     libs: [
         "framework-statsd",
     ],
+    static_libs: [
+        "expresslog-catalog",
+    ],
 }
 
 genrule {
     name: "statslog-expresslog-java-gen",
     tools: ["stats-log-api-gen"],
     cmd: "$(location stats-log-api-gen) --java $(out) --module expresslog" +
-        " --javaPackage com.android.modules.expresslog --javaClass StatsExpressLog",
+        " --javaPackage com.android.modules.expresslog" +
+        " --javaClass StatsExpressLog",
     out: ["com/android/modules/expresslog/StatsExpressLog.java"],
 }
