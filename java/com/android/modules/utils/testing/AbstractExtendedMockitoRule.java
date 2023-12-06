@@ -133,8 +133,16 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
         return Collections.unmodifiableSet(staticClasses);
     }
 
-
-
+    /**
+     * Gets whether the rule should clear the inline mocks after the given test.
+     *
+     * <p>By default, it returns {@code} (unless the rule was built with
+     * {@link AbstractBuilder#dontClearInlineMocks()}, but subclasses can override to change the
+     * behavior (for example, to decide based on custom annotations).
+     */
+    protected boolean getClearInlineMethodsAtTheEnd(Description description) {
+        return mClearInlineMocks;
+    }
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -247,12 +255,13 @@ public abstract class AbstractExtendedMockitoRule<R extends AbstractExtendedMock
                 }
             }
         } finally {
-            clearInlineMocks();
+            clearInlineMocks(description);
         }
     }
 
-    private void clearInlineMocks() {
-        if (!mClearInlineMocks) {
+    private void clearInlineMocks(Description description) {
+        boolean clearIt = getClearInlineMethodsAtTheEnd(description);
+        if (!clearIt) {
             Log.d(TAG, "NOT calling clearInlineMocks() as set on builder");
             return;
         }

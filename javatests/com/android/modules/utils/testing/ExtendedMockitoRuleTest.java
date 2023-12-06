@@ -639,6 +639,16 @@ public final class ExtendedMockitoRuleTest {
         assertWithMessage("mockito framework cleared").that(mockitoFramework.called).isTrue();
     }
 
+    @Test
+    public void testGetClearInlineMethodsAtTheEnd() throws Throwable {
+        assertWithMessage("getClearInlineMethodsAtTheEnd() by default")
+                .that(mBuilder.build().getClearInlineMethodsAtTheEnd(mDescription)).isTrue();
+        assertWithMessage("getClearInlineMethodsAtTheEnd() when built with dontClearInlineMocks()")
+                .that(mBuilder.dontClearInlineMocks().build()
+                        .getClearInlineMethodsAtTheEnd(mDescription))
+                .isFalse();
+    }
+
     private void applyRuleOnTestThatDoesntUseExpectation(@Nullable Strictness strictness)
             throws Throwable {
         Log.d(TAG, "applyRuleOnTestThatDoesntUseExpectation(): strictness= " + strictness);
