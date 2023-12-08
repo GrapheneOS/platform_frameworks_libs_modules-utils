@@ -65,7 +65,6 @@ public final class ExtendedMockitoRuleTest {
 
     private @Mock Statement mStatement;
     private @Mock Runnable mRunnable;
-    private @Mock ExtendedMockitoRule.SessionBuilderVisitor mSessionBuilderVisitor;
     private @Mock StaticMockFixture mStaticMockFixture1;
     private @Mock StaticMockFixture mStaticMockFixture2;
     private @Mock StaticMockFixture mStaticMockFixture3;
@@ -97,12 +96,6 @@ public final class ExtendedMockitoRuleTest {
     @Test
     public void testBuilder_setStrictness_null() {
         assertThrows(NullPointerException.class, () -> mBuilder.setStrictness(null));
-    }
-
-    @Test
-    public void testBuilder_configureSessionBuilder_null() {
-        assertThrows(NullPointerException.class,
-                () -> mBuilder.configureSessionBuilder(null));
     }
 
     @Test
@@ -420,18 +413,6 @@ public final class ExtendedMockitoRuleTest {
     }
 
     @Test
-    public void testSpyStatic_afterConfigureSessionBuilder() throws Throwable {
-        assertThrows(IllegalStateException.class, () -> mBuilder
-                .configureSessionBuilder(mSessionBuilderVisitor).spyStatic(StaticClass.class));
-    }
-
-    @Test
-    public void testMockStatic_afterConfigureSessionBuilder() throws Throwable {
-        assertThrows(IllegalStateException.class, () -> mBuilder
-                .configureSessionBuilder(mSessionBuilderVisitor).mockStatic(StaticClass.class));
-    }
-
-    @Test
     public void testAddStaticMockFixtures_once() throws Throwable {
         InOrder inOrder = inOrder(mStaticMockFixture1, mStaticMockFixture2);
 
@@ -512,26 +493,6 @@ public final class ExtendedMockitoRuleTest {
         inOrder.verify(mStaticMockFixture3).tearDown();
         inOrder.verify(mStaticMockFixture2).tearDown();
         inOrder.verify(mStaticMockFixture1).tearDown();
-    }
-
-    @Test
-    public void testConfigureSessionBuilder_afterMockStatic() throws Throwable {
-        assertThrows(IllegalStateException.class, () -> mBuilder.mockStatic(StaticClass.class)
-                .configureSessionBuilder(mSessionBuilderVisitor));
-    }
-
-    @Test
-    public void testConfigureSessionBuilder_afterSpyStatic() throws Throwable {
-        assertThrows(IllegalStateException.class, () -> mBuilder.spyStatic(StaticClass.class)
-                .configureSessionBuilder(mSessionBuilderVisitor));
-    }
-
-    @Test
-    public void testConfigureSessionBuilder() throws Throwable {
-        mUnsafeBuilder.configureSessionBuilder(mSessionBuilderVisitor)
-                .build().apply(mStatement, mDescription).evaluate();
-
-        verify(mSessionBuilderVisitor).visit(notNull());
     }
 
     @Test
