@@ -37,40 +37,7 @@ android_test {
         "android.test.runner",
     ],
 
-    jni_libs: [
-        "libexpresslog_test_jni",
-    ],
-
     test_suites: [
         "general-tests",
-    ],
-}
-
-cc_library_shared {
-    name: "libexpresslog_test_jni",
-
-    sdk_version: "current",
-    min_sdk_version: "30",
-
-    cflags: [
-        "-Wall",
-        "-Werror",
-        "-Wextra",
-
-        "-DNAMESPACE_FOR_HASH_FUNCTIONS=farmhash",
-    ],
-    srcs: [
-        "jni/onload.cpp",
-    ],
-    header_libs: [
-        "liblog_headers",
-        "libnativehelper_header_only",
-    ],
-    shared_libs: [
-        "liblog",
-    ],
-    static_libs: [
-        "libexpresslog_jni",
-        "libtextclassifier_hash_static",
     ],
 }
